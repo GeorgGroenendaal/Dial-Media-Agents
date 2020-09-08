@@ -69,7 +69,7 @@
 %----------------------------------------------------------------------------------------
 
 \HRule \\[0.4cm]
-{ \huge \bfseries Analyse the influence of media agents on an agent-based population in terms of social outcomes (social aggregation and radicalisation)}\\[0.4cm] % Title of your document
+{ \huge \bfseries What Effect Does the Introduction of Broadcasting Agents in the DIAL Framework Have on Opinion Radicalisation and Group Segregation?}\\[0.4cm] % Title of your document
 \HRule \\[1.5cm]
  
 %----------------------------------------------------------------------------------------
@@ -119,11 +119,13 @@ dr. Malvin \textsc{Gattinger} \\
 \end{titlepage}
 
 \section{Proposal}
-Analyse the influence of media agents on an agent-based population in terms of social outcomes (social aggregation and radicalisation). 
-\newline
-\newline
-Based on the following paper: \cite{dykstra2013}
-
+\cite{dykstra2013} used a multi-agent system to study opinion dynamics and social influence. The agents' behaviour is informed by the theory of reasoned action and social judgement theory. This covers the composition of attitudes, i.e. the sum of weighted beliefs, as well as the circumstances under which an agent changes its belief. In this environment, agents compete with each other in dialogues for reputation points. \cite{dykstra2013} mainly evaluated the emergent behaviour in terms of social outcomes. What they observed was intra-group radicalisation of opinion. Our goal is to introduce a different type of agent, a so-called media agent/broadcasting agent, and study if their presence has an impact on opinion radicalisation or group segregation. In particular, it may be of interest to study the effects of having media agents represent the diversity of opinion in the population versus not having that. Our idea of a media agent is thus far rather vague, but includes some of the following characteristics:
+\begin{itemize}
+  \item Normal agents can move in physical space (representing the proximity of social relations). We want to either propose that media agents have a high inertia or do not move at all. The implicit assumption here is that media outlets remain consistent in their political beliefs, but people do not.
+  \item Media agents have a higher reputation than normal agents. 
+  \item Media agents cannot be attacked / challenged by regular agents.
+  \item A media agent's reputation is a function of the number of regular agents supporting its views.
+\end{itemize}
 
 \bibliographystyle{plainnat}
 \bibliography{lib.bib}
