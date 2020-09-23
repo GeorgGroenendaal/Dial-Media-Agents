@@ -1,4 +1,4 @@
-# Design-of-multi-agent-systems
+# Media agents in DIAL
 
 ## Documentation
 
