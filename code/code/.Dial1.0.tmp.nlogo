@@ -207,7 +207,7 @@ to announce ;turtle procedure
 end
 
 to-report find-location [a b]
-  output-print b
+  output b
   if empty? b [report false]
   let fl find-location a but-first b
   ifelse fl [
