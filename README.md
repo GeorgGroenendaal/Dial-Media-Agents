@@ -1,5 +1,11 @@
 # Media agents in DIAL
 
+## Original implementation
+
+Link to the DIAL implementation:
+
+https://www.comses.net/codebases/3418/releases/1.0.0/
+
 ## Documentation
 
 Documentation is now in a seperate subrepository hosted on overleaf. Fetch all subrepositories using:
@@ -20,4 +26,4 @@ Documentation is now in a seperate subrepository hosted on overleaf. Fetch all s
 
 
 **NOTE** Right now docs are only available to members of the oerleaf repository, after finishing of the project this will be made available.
-    
+
