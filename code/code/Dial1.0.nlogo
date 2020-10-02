@@ -10,6 +10,15 @@ peoples-own [
    profit-strategy  ; list of learned profits of all strategy
    prior-size       ; prior size for profit
  ]
+medias-own [
+   props            ; a list of pairs: < evidence importance >
+   init-props       ; a list of pairs: < evidence importance > the initial values
+   announcements    ; a list of 4-tuples: < key <evidence importance> ticks trust>
+   attacks          ; pairs: < attacking-agent prop >
+   questions        ; pairs: < requesting-agent prop >
+   profit-strategy  ; list of learned profits of all strategy
+   prior-size       ; prior size for profit
+ ]
 patches-own [ pprops]
 
 globals [delta action-prob-pairs current-prop number-of-props total-odds totalsim totalsize filenaam agentsorderedatstart triangles strategy-shapes plottitle _recording-save-file-name]
@@ -51,8 +60,10 @@ ifelse abs (pimportance - neutral-importance) > forgetspeed
 end
 
 to forget-announcements
+  if breed = peoples [
    let yesterday ticks - 10
    set announcements filter [ ?1 -> yesterday < item 2  ?1 ]  announcements
+  ]
 end
 
 
@@ -95,42 +106,22 @@ to setup
               set profit-strategy [0 0 0]
             ]
   create-medias number-of-medias [setxy random-xcor random-ycor
-              ;set props generateopinions
-              ;set init-props props
-              ;set announcements []
-              ;set attacks []
-              ;set questions []
+              set props generateopinions
+              set init-props props
+              set announcements []
+              set attacks []
+              set questions []
               set color red
-              ;set label who
-              ;set label-color 66
-              ;set size (random-float 2) + 1
-              ;set profit-strategy [0 0 0]
+              ;set color  scale-color red first (item current-prop props)  1 0
+              set label who
+              set label-color 66
+              set size (random-float 2) + 1
+              set profit-strategy [0 0 0]
   ]
   set totalsize  sum [size] of turtles
   setup-plot
   ;update-plotfile ;; !!!!!!!
 end
-
-;to create-number-of-medias
- ; create-medias 1
-  ;ask medias [ setxy random-xcor random-ycor ]
-  ;ask medias [ set color red ]
-  ;create-medias create-number-of-medias [setxy random-xcor random-ycor
-
-              ;set props generateopinions
-              ;set init-props props
-              ;set announcements []
-              ;set attacks []
-              ;set questions []
-              ;set color  scale-color red  first (item current-prop props)  1 0
-              ;set color red
-              ;set label who
-              ;set label-color 66
-              ;set size (random-float 2) + 1
-              ;set profit-strategy [0 0 0]
-   ;         ]
-
-;end
 
 to-report incr-total-odds [ee]
 set total-odds total-odds + ee
@@ -171,6 +162,7 @@ to-report similar-attitude [a b]
 end
 
 to act
+  if breed = peoples [
   set prior-size size
   run second (find-action (random-float total-odds) action-prob-pairs)
   let sim   force-of-norms * similar-attitude props pprops / number-of-propositions
@@ -183,6 +175,7 @@ to act
   foreach [0 1 2] [ ?1 ->
     ifelse item ?1 strategy-shapes = shape [set profit-strategy replace-item ?1 profit-strategy (size - prior-size) ]
       [set profit-strategy replace-item ?1 profit-strategy (item ?1 profit-strategy + 0.001) ]
+  ]
   ]
 end
 
@@ -229,6 +222,7 @@ to-report find-location [a b]
 end
 
 to update-announcement [w p ev i ] ; w = sender, p = proposition
+  if breed = peoples [
   ; update memory
   let key number-of-agents * p + w
   let loc find-location key announcements
@@ -247,6 +241,7 @@ to update-announcement [w p ev i ] ; w = sender, p = proposition
   if agree < rejection - 1 [
      setopinion p  (list (accepte evidence (1 - ev)) (accepti ( agreementfactor evidence (1 - ev)) importance i))
     ]  ; attack agent w on p
+  ]
 end
 
 ;; update the patches with the information of the announcement
@@ -293,6 +288,7 @@ to question
 end
 
 to answer-questions
+  if breed = peoples [
   if not empty? questions [
      let q one-of questions
      let ag first q
@@ -307,6 +303,7 @@ to answer-questions
 ;       [ announce-patch ag (second q) evidence importance]
      set questions []
     ]
+  ]
 end
 
 to-report agrees [v] ; rank the announcements for attack
@@ -333,6 +330,7 @@ to attack
 end
 
 to reply-attacks
+  if breed = peoples [
 if size > 1 [
    let pr  filter [ ?1 -> [size] of first ?1 > 1 ] attacks ; only attacks one ofthe agents who have sufficient reputation
    if not empty? pr [
@@ -373,6 +371,7 @@ if size > 1 [
     show (word self "replies attack on " p " of " first a " and wins " win)
   ]]
 set attacks []
+  ]
  ;  ask my-in-links [die]
 end
 
@@ -612,8 +611,10 @@ end
 
 ; Prefered Opinion is the opinion with the highest importance.
 to-report preferredopinion
+  if breed = peoples [
   let ev map [ ?1 -> first ?1 ] props
   report position (max ev) ev
+  ]
 end
 
 
@@ -637,8 +638,9 @@ end
 to show-evid       ;; show the evidence mode again
                    ;; show a map of the evidence values black yellow white for turtles
                    ;; black blue white for patches
+
   ask patches [set pcolor  scale-color blue   (first item current-prop pprops) 0 1]
-  ask turtles [set color  scale-color yellow   (first item current-prop props) 1 -0]
+  ask peoples [set color  scale-color yellow   (first item current-prop props) 1 -0]
 end
 
 to show-importance set viewmode false show-world end
@@ -690,12 +692,11 @@ to setup-plotfile
 end
 
 to update-plot
-
   let tmp 0
   set-current-plot "Distribution of Evidence"
-    histogram [first item current-prop props] of turtles
+    histogram [first item current-prop props] of peoples
     set-current-plot "Importance Distribution"
-    histogram [second item current-prop props] of turtles
+    histogram [second item current-prop props] of peoples
  set-current-plot plottitle
     set-current-plot-pen "Reputation Distribution";; black
     set tmp report-authority plot tmp
@@ -1523,9 +1524,9 @@ SLIDER
 137
 number-of-medias
 number-of-medias
-1
+0
 100
-10.0
+6.0
 1
 1
 NIL
