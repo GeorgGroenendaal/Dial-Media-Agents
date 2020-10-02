@@ -1,6 +1,7 @@
 extensions [array vid]
 breed [medias media]
-turtles-own [
+breed [peoples people]
+peoples-own [
    props            ; a list of pairs: < evidence importance >
    init-props       ; a list of pairs: < evidence importance > the initial values
    announcements    ; a list of 4-tuples: < key <evidence importance> ticks trust>
@@ -13,26 +14,6 @@ patches-own [ pprops]
 
 globals [delta action-prob-pairs current-prop number-of-props total-odds totalsim totalsize filenaam agentsorderedatstart triangles strategy-shapes plottitle _recording-save-file-name]
 
-to creat-media-agents
-  create-medias 1
-  ask medias [ setxy random-xcor random-ycor ]
-  ask medias [ set color red ]
-  ;  crt number-of-agents [setxy random-xcor random-ycor
-
-              ;set props generateopinions
-              ;set init-props props
-              ;set announcements []
-              ;set attacks []
-              ;set questions []
-              ;set color  scale-color red  first (item current-prop props)  1 0
-              ;set color red
-              ;set label who
-              ;set label-color 66
-              ;set size (random-float 2) + 1
-              ;set profit-strategy [0 0 0]
-   ;         ]
-
-end
 ; Utility functions
 to-report second [l]
 report item 1 l
@@ -70,10 +51,8 @@ ifelse abs (pimportance - neutral-importance) > forgetspeed
 end
 
 to forget-announcements
-  if breed != medias [
    let yesterday ticks - 10
    set announcements filter [ ?1 -> yesterday < item 2  ?1 ]  announcements
-  ]
 end
 
 
@@ -103,7 +82,7 @@ to setup
   ask patches [set pcolor blue
                set pprops[]
                repeat number-of-props [ set pprops fput (list 0.5 neutral-importance) pprops]]
-  crt number-of-agents [setxy random-xcor random-ycor
+  create-peoples number-of-agents [setxy random-xcor random-ycor
               set props generateopinions
               set init-props props
               set announcements []
@@ -115,10 +94,43 @@ to setup
               set size (random-float 2) + 1
               set profit-strategy [0 0 0]
             ]
+  create-medias number-of-medias [setxy random-xcor random-ycor
+              ;set props generateopinions
+              ;set init-props props
+              ;set announcements []
+              ;set attacks []
+              ;set questions []
+              set color red
+              ;set label who
+              ;set label-color 66
+              ;set size (random-float 2) + 1
+              ;set profit-strategy [0 0 0]
+  ]
   set totalsize  sum [size] of turtles
   setup-plot
   ;update-plotfile ;; !!!!!!!
 end
+
+;to create-number-of-medias
+ ; create-medias 1
+  ;ask medias [ setxy random-xcor random-ycor ]
+  ;ask medias [ set color red ]
+  ;create-medias create-number-of-medias [setxy random-xcor random-ycor
+
+              ;set props generateopinions
+              ;set init-props props
+              ;set announcements []
+              ;set attacks []
+              ;set questions []
+              ;set color  scale-color red  first (item current-prop props)  1 0
+              ;set color red
+              ;set label who
+              ;set label-color 66
+              ;set size (random-float 2) + 1
+              ;set profit-strategy [0 0 0]
+   ;         ]
+
+;end
 
 to-report incr-total-odds [ee]
 set total-odds total-odds + ee
@@ -131,6 +143,7 @@ to-report find-action [c l]
 end
 
 to go
+  if breed =  [
    set total-odds 0
    set action-prob-pairs (map [ [?1 ?2] -> list (incr-total-odds ?1) ?2 ]
          (list chance-announce chance-question chance-attack chance-walk chance-learn-by-neighbour
@@ -151,17 +164,15 @@ to go
    ask turtles [set size max (list 0 (size * f))]
 ;   update-plot ;; !!!!!!
    show-world
+  ]
    tick
 end
 
 to-report similar-attitude [a b]
-  if a != medias [
   report sum (map [ [?1 ?2] -> agreementfactor first ?1 first ?2 ] a b )
-  ]
 end
 
 to act
-  if breed != medias [
   set prior-size size
   run second (find-action (random-float total-odds) action-prob-pairs)
   let sim   force-of-norms * similar-attitude props pprops / number-of-propositions
@@ -175,7 +186,6 @@ to act
     ifelse item ?1 strategy-shapes = shape [set profit-strategy replace-item ?1 profit-strategy (size - prior-size) ]
       [set profit-strategy replace-item ?1 profit-strategy (item ?1 profit-strategy + 0.001) ]
   ]
-  ]
 end
 
 ;to-report inrange [a b c]
@@ -187,7 +197,6 @@ end
 
 
 to announce ;turtle procedure
-  if breed != medias [
  if size > announce-threshold [
 
       let announce-odds sum map [ ?1 -> second ?1 ] props
@@ -211,17 +220,14 @@ to announce ;turtle procedure
          [ announce-patch myself p evidence importance]
          ;; this is a tricky way to pass a turtle via an ask patches command to a number of patches
    ]
-  ]
 end
 
 to-report find-location [a b]
-  if breed != medias [
   if empty? b [report false]
   let fl find-location a but-first b
   ifelse fl [
       ifelse first first b = a  and not fl [report 0][report (1 + fl)]
     ][report false]
-  ]
 end
 
 to update-announcement [w p ev i ] ; w = sender, p = proposition
@@ -289,7 +295,6 @@ to question
 end
 
 to answer-questions
-  if breed != medias [
   if not empty? questions [
      let q one-of questions
      let ag first q
@@ -304,7 +309,6 @@ to answer-questions
 ;       [ announce-patch ag (second q) evidence importance]
      set questions []
     ]
-  ]
 end
 
 to-report agrees [v] ; rank the announcements for attack
@@ -376,15 +380,12 @@ end
 
 
 to walk
-  if breed != medias [
     find-direction
     rt random undirectedness - random undirectedness
     fd random-float stepsize
-  ]
 end
 
 to find-direction  ;; face to the most similar agent
-  if breed != medias [
   let p props
   let best-match  0
   ifelse (shape = "face happy") ; commando: ask n-of 30 turtles [set shape "face happy"]
@@ -393,7 +394,6 @@ to find-direction  ;; face to the most similar agent
 ;set best-match max-one-of patches in-radius (visual-horizon) [similar-attitude p pprops]
   if best-match != nobody [face best-match]
   if shape = "default" [ifelse random 2 =  0 [right 90][left 90]]
-  ]
 end
 
 to change-strategy
@@ -640,8 +640,7 @@ to show-evid       ;; show the evidence mode again
                    ;; show a map of the evidence values black yellow white for turtles
                    ;; black blue white for patches
   ask patches [set pcolor  scale-color blue   (first item current-prop pprops) 0 1]
-  ask turtles [
-set color  scale-color yellow   (first item current-prop props) 1 -0]
+  ask turtles [set color  scale-color yellow   (first item current-prop props) 1 -0]
 end
 
 to show-importance set viewmode false show-world end
@@ -1249,7 +1248,7 @@ CHOOSER
 current-proposition
 current-proposition
 "A" "B" "C" "D" "E" "F" "G" "H" "I" "J"
-4
+0
 
 SLIDER
 13
@@ -1519,22 +1518,20 @@ Opinion & Size related
 0.0
 1
 
-BUTTON
-1114
-47
-1271
-80
-Create media agents
-creat-media-agents
-NIL
+SLIDER
+1213
+104
+1385
+137
+number-of-medias
+number-of-medias
 1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
+100
+10.0
 1
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?
