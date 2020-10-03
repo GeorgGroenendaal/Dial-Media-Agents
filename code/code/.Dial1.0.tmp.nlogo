@@ -89,7 +89,7 @@ to setup
                    ["A" "B" "C" "D" "E" "F" "G" "H" "I" "J"]) (number-of-props - 1))
   ;; create turtles with random  locations, evidence and importance values
   set strategy-shapes ["circle" "default" "face happy"]
-  set-default-shape turtles "circle"
+  set-default-shape  "circle"
   ask patches [set pcolor blue
                set pprops[]
                repeat number-of-props [ set pprops fput (list 0.5 neutral-importance) pprops]]
@@ -111,8 +111,8 @@ to setup
               set announcements []
               set attacks []
               set questions []
-              ;set color red
-              set color  scale-color red first (item current-prop props)  1 0
+              set color red
+              ;set color  scale-color red first (item current-prop props)  1 0
               set label who
               set label-color 66
               set size (random-float 2) + 1
@@ -677,7 +677,7 @@ to setup-plotfile
   set filenaam user-new-file
   file-open filenaam
   set agentsorderedatstart sort-by [ [?1 ?2] -> [first item current-prop props] of ?1 <
-                                    [first item current-prop props] of ?2 ] turtles
+                                    [first item current-prop props] of ?2 ] peoples
 
   set-current-plot "Distribution of Evidence"
   set-plot-y-range 0 number-of-agents
@@ -716,9 +716,9 @@ to update-plotfile
 if (ticks > 199)[
   let tmp 0
   set-current-plot "Distribution of Evidence"
-    histogram [first item current-prop props] of turtles ; evidence of currently displayed prop
+    histogram [first item current-prop props] of peoples ; evidence of currently displayed prop
     set-current-plot "Importance Distribution"
-    histogram [second item current-prop props] of turtles ;; importance of currently displayed prop
+    histogram [second item current-prop props] of peoples ;; importance of currently displayed prop
  set-current-plot plottitle
 
     file-type force-of-argumentation
@@ -741,43 +741,43 @@ end
 
 ; Lattitude of Acceptance. Average number of props with evidence > 0.8
 to-report report-LOA
-  report mean [LOA] of turtles / number-of-props
+  report mean [LOA] of peoples / number-of-props
 end
 
 ; Lattitude of Non-commitment. Average number of props with 0.2 <= evidence <= 0.8
 to-report report-LON
-  report mean [LON] of turtles / number-of-props
+  report mean [LON] of peoples / number-of-props
 end
 
 
 to-report report-giniprefop ;gini of preferred opinion
   report gini ranks number-of-propositions
                     [abs ( 2 * (preferredopinion - number-of-propositions / 2 ) /
-                           number-of-propositions) ] of turtles
+                           number-of-propositions) ] of peoples
 end
 
 ; Average evidence of Preferred Opinion.
 to-report report-eopop
-  report mean [abs  (2 * first item preferredopinion props - 1)] of turtles
+  report mean [abs  (2 * first item preferredopinion props - 1)] of peoples
 end
 
 to-report report-iopop
-  report mean [ second item preferredopinion props] of turtles
+  report mean [ second item preferredopinion props] of peoples
 end
 
 
 to-report report-ginievid
-  report gini [abs  (2 * first item preferredopinion props - 1)] of turtles
+  report gini [abs  (2 * first item preferredopinion props - 1)] of peoples
 end
 
 to-report report-giniimp
-  report gini [ second item preferredopinion props] of turtles
+  report gini [ second item preferredopinion props] of peoples
 end
 
 
 to-report report-authority
 ;   report max [size] of turtles / number-of-agents
-   report gini  [size] of turtles
+   report gini  [size] of peoples
 end
 
 
@@ -785,9 +785,9 @@ end
 
 
 to-report report-pressure
-;;  let tmp (turtles with [ (sign first item current-prop props) = (sign first item current-prop pprops)] )
+;;  let tmp (peoples with [ (sign first item current-prop props) = (sign first item current-prop pprops)] )
 ;;  report (mean [min lput visual-horizon ([distance myself] of same-kind-neighbours in-radius visual-horizon)] of turtles ) / visual-horizon
-report gini ranks 10 [abs first item current-prop props] of turtles
+report gini ranks 10 [abs first item current-prop props] of peoples
 end
 
 to-report report-unanimpatch
@@ -830,16 +830,16 @@ to-report clustering1
 end
 
 to-report clustering
-  report 1 - mean [avg-dist] of turtles / visual-horizon
+  report 1 - mean [avg-dist] of peoples / visual-horizon
 end
 
 to-report avg-dist
-  let m mean [distance myself] of turtles in-radius visual-horizon
+  let m mean [distance myself] of peoples in-radius visual-horizon
   ifelse m = 0 [report 1][report m]
 end
 
 to-report talking
-  report count turtles with [size > 1.3]  / number-of-agents
+  report count peoples with [size > 1.3]  / number-of-agents
 end
 
 to-report ranks [n L] ;; n- aantal klassen L- data
@@ -1526,7 +1526,7 @@ number-of-medias
 number-of-medias
 0
 100
-6.0
+4.0
 1
 1
 NIL

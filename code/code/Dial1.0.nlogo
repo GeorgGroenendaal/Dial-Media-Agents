@@ -89,7 +89,7 @@ to setup
                    ["A" "B" "C" "D" "E" "F" "G" "H" "I" "J"]) (number-of-props - 1))
   ;; create turtles with random  locations, evidence and importance values
   set strategy-shapes ["circle" "default" "face happy"]
-  set-default-shape turtles "circle"
+  set-default-shape peoples "circle"
   ask patches [set pcolor blue
                set pprops[]
                repeat number-of-props [ set pprops fput (list 0.5 neutral-importance) pprops]]
@@ -118,7 +118,7 @@ to setup
               set size (random-float 2) + 1
               set profit-strategy [0 0 0]
   ]
-  set totalsize  sum [size] of turtles
+  set totalsize  sum [size] of peoples
   setup-plot
   ;update-plotfile ;; !!!!!!!
 end
@@ -141,17 +141,17 @@ to go
          (list "announce" "question" "attack" "walk" "learn-by-neighbour"
               "learn-by-environment" "mutate" "change-strategy" ))
    set totalsim 0
-   ask turtles [act]
+   ask peoples [act]
    ask patches [  ; to forget
        set pprops map [ ?1 -> list (forget-pevidence first ?1) (forget-pimportance second ?1) ] pprops ]
 
-   ask turtles [
+   ask peoples [
        forget-announcements
        answer-questions
        reply-attacks
        ]
    let f totalsize / (totalsize + totalsim)
-   ask turtles [set size max (list 0 (size * f))]
+   ask peoples [set size max (list 0 (size * f))]
 ;   update-plot ;; !!!!!!
    show-world
    tick
@@ -205,7 +205,7 @@ to announce ;turtle procedure
   let importance (second item p props  + firmness-of-principle * second item p init-props) /
                (firmness-of-principle + 1)
   let loud random-float loudness * size
-  ask other turtles with [distance myself < loud]
+  ask other peoples with [distance myself < loud]
          [ update-announcement w p evidence importance]
   ask patches with [distance myself < loud]
          [ announce-patch myself p evidence importance]
@@ -282,7 +282,7 @@ to question
    let imp  map [ ?1 -> second ?1 ] props
    let max-imp-question  position max imp imp    ; my most important proposition
 ;   let me self
-   let candidate one-of other turtles with [distance myself < visual-horizon]
+   let candidate one-of other peoples with [distance myself < visual-horizon]
    if candidate != nobody     ; ask a passer-by
        [ask candidate [set questions fput (list myself max-imp-question) questions]]
 end
@@ -297,7 +297,7 @@ to answer-questions
 ;     let pps props
      let evidence first (item (second q) props)
      let importance second (item (second q) props)
-     ask other turtles with [distance myself <= ag-dist]
+     ask other peoples with [distance myself <= ag-dist]
        [ update-announcement w (second q)  evidence importance]
 ;    ask patches with [distance ag < loud ]
 ;       [ announce-patch ag (second q) evidence importance]
@@ -400,7 +400,7 @@ to change-strategy
 end
 
 to learn-by-neighbour
-  let nb one-of turtles-on neighbors
+  let nb one-of peoples-on neighbors
   if nb != nobody [
       let  i random number-of-props
 ;      setopinion i  (item i [props] of nb) ; zonder acceptance
@@ -508,9 +508,9 @@ end
 to createtriangles
   clear-links
   set triangles []
-  ask turtles [create-links-with other turtles in-radius visual-horizon
+  ask peoples [create-links-with other peoples in-radius visual-horizon
                  [set color blue]]
-  ask turtles with [count link-neighbors >= 2]
+  ask peoples with [count link-neighbors >= 2]
     [let w1 who
      ask link-neighbors
        [let w2 who ask link-neighbors [checktriangles w1 w2]]]
@@ -632,7 +632,7 @@ end
 to show-imp        ;; show a map of the importance values black red white for turtles
                    ;; black green white for patches
   ask patches [set pcolor  scale-color green  (second item current-prop pprops) 0 1]
-  ask turtles [set color  scale-color red   (second item current-prop props) 1 -0]
+  ask peoples [set color  scale-color red   (second item current-prop props) 1 -0]
 end
 
 to show-evid       ;; show the evidence mode again
@@ -677,7 +677,7 @@ to setup-plotfile
   set filenaam user-new-file
   file-open filenaam
   set agentsorderedatstart sort-by [ [?1 ?2] -> [first item current-prop props] of ?1 <
-                                    [first item current-prop props] of ?2 ] turtles
+                                    [first item current-prop props] of ?2 ] peoples
 
   set-current-plot "Distribution of Evidence"
   set-plot-y-range 0 number-of-agents
@@ -716,9 +716,9 @@ to update-plotfile
 if (ticks > 199)[
   let tmp 0
   set-current-plot "Distribution of Evidence"
-    histogram [first item current-prop props] of turtles ; evidence of currently displayed prop
+    histogram [first item current-prop props] of peoples ; evidence of currently displayed prop
     set-current-plot "Importance Distribution"
-    histogram [second item current-prop props] of turtles ;; importance of currently displayed prop
+    histogram [second item current-prop props] of peoples ;; importance of currently displayed prop
  set-current-plot plottitle
 
     file-type force-of-argumentation
@@ -741,43 +741,43 @@ end
 
 ; Lattitude of Acceptance. Average number of props with evidence > 0.8
 to-report report-LOA
-  report mean [LOA] of turtles / number-of-props
+  report mean [LOA] of peoples / number-of-props
 end
 
 ; Lattitude of Non-commitment. Average number of props with 0.2 <= evidence <= 0.8
 to-report report-LON
-  report mean [LON] of turtles / number-of-props
+  report mean [LON] of peoples / number-of-props
 end
 
 
 to-report report-giniprefop ;gini of preferred opinion
   report gini ranks number-of-propositions
                     [abs ( 2 * (preferredopinion - number-of-propositions / 2 ) /
-                           number-of-propositions) ] of turtles
+                           number-of-propositions) ] of peoples
 end
 
 ; Average evidence of Preferred Opinion.
 to-report report-eopop
-  report mean [abs  (2 * first item preferredopinion props - 1)] of turtles
+  report mean [abs  (2 * first item preferredopinion props - 1)] of peoples
 end
 
 to-report report-iopop
-  report mean [ second item preferredopinion props] of turtles
+  report mean [ second item preferredopinion props] of peoples
 end
 
 
 to-report report-ginievid
-  report gini [abs  (2 * first item preferredopinion props - 1)] of turtles
+  report gini [abs  (2 * first item preferredopinion props - 1)] of peoples
 end
 
 to-report report-giniimp
-  report gini [ second item preferredopinion props] of turtles
+  report gini [ second item preferredopinion props] of peoples
 end
 
 
 to-report report-authority
 ;   report max [size] of turtles / number-of-agents
-   report gini  [size] of turtles
+   report gini  [size] of peoples
 end
 
 
@@ -785,9 +785,9 @@ end
 
 
 to-report report-pressure
-;;  let tmp (turtles with [ (sign first item current-prop props) = (sign first item current-prop pprops)] )
+;;  let tmp (peoples with [ (sign first item current-prop props) = (sign first item current-prop pprops)] )
 ;;  report (mean [min lput visual-horizon ([distance myself] of same-kind-neighbours in-radius visual-horizon)] of turtles ) / visual-horizon
-report gini ranks 10 [abs first item current-prop props] of turtles
+report gini ranks 10 [abs first item current-prop props] of peoples
 end
 
 to-report report-unanimpatch
@@ -830,16 +830,16 @@ to-report clustering1
 end
 
 to-report clustering
-  report 1 - mean [avg-dist] of turtles / visual-horizon
+  report 1 - mean [avg-dist] of peoples / visual-horizon
 end
 
 to-report avg-dist
-  let m mean [distance myself] of turtles in-radius visual-horizon
+  let m mean [distance myself] of peoples in-radius visual-horizon
   ifelse m = 0 [report 1][report m]
 end
 
 to-report talking
-  report count turtles with [size > 1.3]  / number-of-agents
+  report count peoples with [size > 1.3]  / number-of-agents
 end
 
 to-report ranks [n L] ;; n- aantal klassen L- data
@@ -1526,7 +1526,7 @@ number-of-medias
 number-of-medias
 0
 100
-6.0
+4.0
 1
 1
 NIL
