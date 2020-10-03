@@ -89,7 +89,7 @@ to setup
                    ["A" "B" "C" "D" "E" "F" "G" "H" "I" "J"]) (number-of-props - 1))
   ;; create turtles with random  locations, evidence and importance values
   set strategy-shapes ["circle" "default" "face happy"]
-  set-default-shape peoples "circle"
+  set-default-shape  "circle"
   ask patches [set pcolor blue
                set pprops[]
                repeat number-of-props [ set pprops fput (list 0.5 neutral-importance) pprops]]
@@ -118,7 +118,7 @@ to setup
               set size (random-float 2) + 1
               set profit-strategy [0 0 0]
   ]
-  set totalsize  sum [size] of peoples
+  set totalsize  sum [size] of turtles
   setup-plot
   ;update-plotfile ;; !!!!!!!
 end
@@ -141,17 +141,17 @@ to go
          (list "announce" "question" "attack" "walk" "learn-by-neighbour"
               "learn-by-environment" "mutate" "change-strategy" ))
    set totalsim 0
-   ask peoples [act]
+   ask turtles [act]
    ask patches [  ; to forget
        set pprops map [ ?1 -> list (forget-pevidence first ?1) (forget-pimportance second ?1) ] pprops ]
 
-   ask peoples [
+   ask turtles [
        forget-announcements
        answer-questions
        reply-attacks
        ]
    let f totalsize / (totalsize + totalsim)
-   ask peoples [set size max (list 0 (size * f))]
+   ask turtles [set size max (list 0 (size * f))]
 ;   update-plot ;; !!!!!!
    show-world
    tick
@@ -205,7 +205,7 @@ to announce ;turtle procedure
   let importance (second item p props  + firmness-of-principle * second item p init-props) /
                (firmness-of-principle + 1)
   let loud random-float loudness * size
-  ask other peoples with [distance myself < loud]
+  ask other turtles with [distance myself < loud]
          [ update-announcement w p evidence importance]
   ask patches with [distance myself < loud]
          [ announce-patch myself p evidence importance]
@@ -282,7 +282,7 @@ to question
    let imp  map [ ?1 -> second ?1 ] props
    let max-imp-question  position max imp imp    ; my most important proposition
 ;   let me self
-   let candidate one-of other peoples with [distance myself < visual-horizon]
+   let candidate one-of other turtles with [distance myself < visual-horizon]
    if candidate != nobody     ; ask a passer-by
        [ask candidate [set questions fput (list myself max-imp-question) questions]]
 end
@@ -297,7 +297,7 @@ to answer-questions
 ;     let pps props
      let evidence first (item (second q) props)
      let importance second (item (second q) props)
-     ask other peoples with [distance myself <= ag-dist]
+     ask other turtles with [distance myself <= ag-dist]
        [ update-announcement w (second q)  evidence importance]
 ;    ask patches with [distance ag < loud ]
 ;       [ announce-patch ag (second q) evidence importance]
@@ -400,7 +400,7 @@ to change-strategy
 end
 
 to learn-by-neighbour
-  let nb one-of peoples-on neighbors
+  let nb one-of turtles-on neighbors
   if nb != nobody [
       let  i random number-of-props
 ;      setopinion i  (item i [props] of nb) ; zonder acceptance
@@ -508,9 +508,9 @@ end
 to createtriangles
   clear-links
   set triangles []
-  ask peoples [create-links-with other peoples in-radius visual-horizon
+  ask turtles [create-links-with other turtles in-radius visual-horizon
                  [set color blue]]
-  ask peoples with [count link-neighbors >= 2]
+  ask turtles with [count link-neighbors >= 2]
     [let w1 who
      ask link-neighbors
        [let w2 who ask link-neighbors [checktriangles w1 w2]]]
@@ -632,7 +632,7 @@ end
 to show-imp        ;; show a map of the importance values black red white for turtles
                    ;; black green white for patches
   ask patches [set pcolor  scale-color green  (second item current-prop pprops) 0 1]
-  ask peoples [set color  scale-color red   (second item current-prop props) 1 -0]
+  ask turtles [set color  scale-color red   (second item current-prop props) 1 -0]
 end
 
 to show-evid       ;; show the evidence mode again
