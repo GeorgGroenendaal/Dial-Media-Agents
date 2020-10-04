@@ -1,10 +1,16 @@
 # Media agents in DIAL
 
+## Instructions on how to run the code
+Download the latest version of Netlogo from https://ccl.northwestern.edu/netlogo/references.shtml.
+Our implementation is on the master branch in code/code/ and is called Dial1.0.nlogo.
+Once you open NetLogo, you can open the file Dial1.0.nlogo to run our program. 
+In order to initialise the simulation, press the "setup" button. To start the simulation, press "go".
+
 ## Original implementation
 
-Link to the DIAL implementation:
-
+Link to the DIAL implementation by Dykstra:
 https://www.comses.net/codebases/3418/releases/1.0.0/
+
 
 ## Documentation
 
