@@ -1525,7 +1525,7 @@ number-of-medias
 number-of-medias
 0
 100
-6.0
+4.0
 1
 1
 NIL
