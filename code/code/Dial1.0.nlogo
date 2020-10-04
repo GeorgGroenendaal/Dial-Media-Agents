@@ -14,9 +14,6 @@ medias-own [
    props            ; a list of pairs: < evidence importance >
    init-props       ; a list of pairs: < evidence importance > the initial values
    announcements    ; a list of 4-tuples: < key <evidence importance> ticks trust>
-   attacks          ; pairs: < attacking-agent prop >
-   questions        ; pairs: < requesting-agent prop >
-   profit-strategy  ; list of learned profits of all strategy
    prior-size       ; prior size for profit
  ]
 patches-own [ pprops]
@@ -105,18 +102,17 @@ to setup
               set size (random-float 2) + 1
               set profit-strategy [0 0 0]
             ]
-  create-medias number-of-medias [setxy random-xcor random-ycor
+  create-medias number-of-medias [
+              setxy (int (who - number-of-agents) * 5 - 20) 16
               set props generateopinions
               set init-props props
               set announcements []
-              set attacks []
-              set questions []
+              set shape "pentagon"
               set color red
               ;set color  scale-color red first (item current-prop props)  1 0
-              set label who
+              set label who - number-of-agents + 1
               set label-color 66
-              set size (random-float 2) + 1
-              set profit-strategy [0 0 0]
+              set size 4
   ]
   set totalsize  sum [size] of peoples
   setup-plot
@@ -142,6 +138,7 @@ to go
               "learn-by-environment" "mutate" "change-strategy" ))
    set totalsim 0
    ask peoples [act]
+   ask medias [act-media]
    ask patches [  ; to forget
        set pprops map [ ?1 -> list (forget-pevidence first ?1) (forget-pimportance second ?1) ] pprops ]
 
@@ -162,21 +159,19 @@ to-report similar-attitude [a b]
 end
 
 to act
-  if breed = peoples [
-  set prior-size size
-  run second (find-action (random-float total-odds) action-prob-pairs)
-  let sim   force-of-norms * similar-attitude props pprops / number-of-propositions
-  set sim   sim - lack-of-princ-penalty * similar-attitude props init-props / number-of-propositions
-  if size + sim > delta [
-    set size size +  sim
-    set totalsim totalsim + sim
-  ]
-  if size < 0 [show "ALERT"]
-  foreach [0 1 2] [ ?1 ->
-    ifelse item ?1 strategy-shapes = shape [set profit-strategy replace-item ?1 profit-strategy (size - prior-size) ]
+    set prior-size size
+    run second (find-action (random-float total-odds) action-prob-pairs)
+    let sim   force-of-norms * similar-attitude props pprops / number-of-propositions
+    set sim   sim - lack-of-princ-penalty * similar-attitude props init-props / number-of-propositions
+    if size + sim > delta [
+      set size size +  sim
+      set totalsim totalsim + sim
+    ]
+    if size < 0 [show "ALERT"]
+    foreach [0 1 2] [ ?1 ->
+      ifelse item ?1 strategy-shapes = shape [set profit-strategy replace-item ?1 profit-strategy (size - prior-size) ]
       [set profit-strategy replace-item ?1 profit-strategy (item ?1 profit-strategy + 0.001) ]
-  ]
-  ]
+    ]
 end
 
 ;to-report inrange [a b c]
@@ -184,6 +179,11 @@ end
 ;end
 
 ; Agent's Actions
+
+to act-media
+  set prior-size size
+  set size size + 0.01
+end
 
 
 
@@ -1056,7 +1056,7 @@ stepsize
 stepsize
 0
 2
-0.8
+0.7
 0.02
 1
 NIL
@@ -1167,7 +1167,7 @@ visual-horizon
 visual-horizon
 1
 20
-5.0
+19.0
 1
 1
 NIL
@@ -1386,7 +1386,7 @@ force-of-norms
 force-of-norms
 0
 1
-1.0
+0.12
 0.01
 1
 NIL
@@ -1401,7 +1401,7 @@ firmness-of-principle
 firmness-of-principle
 0
 10
-2.6
+3.7
 0.1
 1
 NIL
@@ -1416,7 +1416,7 @@ chance-change-strategy
 chance-change-strategy
 0
 10
-0.0
+0.38
 0.01
 1
 NIL
@@ -1446,7 +1446,7 @@ stepsize
 stepsize
 0
 10
-0.8
+0.7
 0.1
 1
 NIL
@@ -1526,7 +1526,7 @@ number-of-medias
 number-of-medias
 0
 100
-4.0
+8.0
 1
 1
 NIL
