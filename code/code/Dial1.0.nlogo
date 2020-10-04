@@ -102,14 +102,15 @@ to setup
               set size (random-float 2) + 1
               set profit-strategy [0 0 0]
             ]
-  create-medias number-of-medias [setxy random-xcor random-ycor
+  create-medias number-of-medias [
+              setxy (int (who - number-of-agents) * 5 - 20) 16
               set props generateopinions
               set init-props props
               set announcements []
               set shape "pentagon"
               set color red
               ;set color  scale-color red first (item current-prop props)  1 0
-              set label who
+              set label who - number-of-agents + 1
               set label-color 66
               set size 4
   ]
@@ -1525,7 +1526,7 @@ number-of-medias
 number-of-medias
 0
 100
-6.0
+8.0
 1
 1
 NIL
