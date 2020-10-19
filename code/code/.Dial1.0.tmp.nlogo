@@ -406,14 +406,17 @@ to walk
 end
 
 to find-direction  ;; face to the most similar agent
+
   let p props
   let best-match  0
   ifelse (shape = "face happy") ; commando: ask n-of 30 turtles [set shape "face happy"]
      [set best-match min-one-of patches in-radius (visual-horizon) [similar-attitude p pprops] ]
      [set best-match max-one-of patches in-radius (visual-horizon) [similar-attitude p pprops]] ; of:: min-one-of...
 ;set best-match max-one-of patches in-radius (visual-horizon) [similar-attitude p pprops]
+  print("find direction 3")
   if best-match != nobody [face best-match]
   if shape = "default" [ifelse random 2 =  0 [right 90][left 90]]
+  print("find direction 4")
 end
 
 to change-strategy
