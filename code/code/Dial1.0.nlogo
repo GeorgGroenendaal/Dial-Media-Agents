@@ -21,7 +21,7 @@ patches-own [ pprops]
 globals [delta action-prob-pairs current-prop number-of-props total-odds totalsim totalsize filenaam agentsorderedatstart triangles strategy-shapes plottitle _recording-save-file-name]
 
 ; Utility functions
-to-report second [l]
+to-report second [l] ; RENAME #################################
 report item 1 l
 end
 
@@ -72,6 +72,12 @@ end
 ;;report list  (random-float 1) (random-float 1)
 ;;end
 
+; A function that gives us a random number within a certain interval
+to-report random-between [ min-num max-num ]
+    report random-float (max-num - min-num) + min-num
+end
+
+
 to setup
   ;; (for this model to work with NetLogo's new plotting features,
   ;; __clear-all-and-reset-ticks should be replaced with clear-all at
@@ -87,10 +93,13 @@ to setup
   ;; create turtles with random  locations, evidence and importance values
   set strategy-shapes ["circle" "default" "face happy"]
   set-default-shape peoples "circle"
-  ask patches [set pcolor blue
+  ask patches [
                set pprops[]
-               repeat number-of-props [ set pprops fput (list 0.5 neutral-importance) pprops]]
-  create-peoples number-of-agents [setxy random-xcor random-ycor
+    repeat number-of-props [ set pprops fput (list 0.5 neutral-importance) pprops]]
+  ask patches [if pycor >= 13 [set pcolor brown]]
+  ask patches [if pycor < 13 [set pcolor blue]]
+  ;; initialise people in a restricted y-coordinate range:
+  create-peoples number-of-agents [setxy random-xcor random-between (min-pycor + 0.5) (max-pycor - 8)
               set props generateopinions
               set init-props props
               set announcements []
@@ -104,10 +113,10 @@ to setup
             ]
   create-medias number-of-medias [
               setxy (int (who - number-of-agents) * 5 - 20) 16
-              set props generateopinions
+              set props generateopinions ;; adjust this function for experiment
               set init-props props
-              set announcements []
-              set shape "pentagon"
+              set announcements [] ;maybe remove ##################################
+              set shape "target"
               set color red
               ;set color  scale-color red first (item current-prop props)  1 0
               set label who - number-of-agents + 1
@@ -118,6 +127,7 @@ to setup
   setup-plot
   ;update-plotfile ;; !!!!!!!
 end
+
 
 to-report incr-total-odds [ee]
 set total-odds total-odds + ee
@@ -139,8 +149,9 @@ to go
    set totalsim 0
    ask peoples [act]
    ask medias [act-media]
-   ask patches [  ; to forget
-       set pprops map [ ?1 -> list (forget-pevidence first ?1) (forget-pimportance second ?1) ] pprops ]
+   ask patches [if pycor < 13  ; to forget
+    [set pprops map [ ?1 -> list (forget-pevidence first ?1) (forget-pimportance second ?1) ] pprops ]]
+
 
    ask peoples [
        forget-announcements
@@ -182,7 +193,16 @@ end
 
 to act-media
   set prior-size size
-  set size size + 0.01
+  let odd-announce random-float 1
+  let w who
+  let p 0
+  let evidence first first props
+  let importance second first props
+  if odd-announce > 0.4[
+    ask other peoples
+         [ update-announcement w p evidence importance]
+         print("QAnon is real")
+  ]
 end
 
 
@@ -190,16 +210,17 @@ end
 to announce ;turtle procedure
  if size > announce-threshold [
 
-      let announce-odds sum map [ ?1 -> second ?1 ] props
-      let choice random-float announce-odds
+      let announce-odds sum map second props ; sums up all the importance values, stores it in announce-odds
+      ; let announce-odds sum map [ ?1 -> second ?1 ] props; we have some multiplying factor (?1)
+      let choice random-float announce-odds ;choose a value between 0 and the sum of all importance values
       let  p 0
-      let choice-inc second first props
+      let choice-inc second first props ;importance value of the first item of the props list
       while [choice >= choice-inc] [
         set p p + 1
-        set choice-inc choice-inc + second item p props
+        set choice-inc choice-inc + second item p props ;adds the importance of the propositions we loop through
       ]
-
-  let w  who
+  ; opinions with a higher importance have a highe probability of being chosen (code above)
+  let w  who ; returns index of current turtle
   let evidence (first item p props  + firmness-of-principle * first item p init-props) /
                (firmness-of-principle + 1)
   let importance (second item p props  + firmness-of-principle * second item p init-props) /
@@ -207,7 +228,7 @@ to announce ;turtle procedure
   let loud random-float loudness * size
   ask other peoples with [distance myself < loud]
          [ update-announcement w p evidence importance]
-  ask patches with [distance myself < loud]
+  ask patches with [distance myself < loud and pycor < 13]
          [ announce-patch myself p evidence importance]
          ;; this is a tricky way to pass a turtle via an ask patches command to a number of patches
    ]
@@ -351,10 +372,10 @@ if size > 1 [
       set size size +  win
       ask first a [set size size - win]
       ifelse win > 0 [
-                       ask patches with [distance first a <  loudness] [announce-patch first a p epro ipro]
+                       ask patches with [distance first a <  loudness and pycor < 13] [announce-patch first a p epro ipro]
                      ]
                      [
-                       ask patches with [distance myself <  loudness] [announce-patch myself p eop iop]
+                       ask patches with [distance myself <  loudness and pycor < 13] [announce-patch myself p eop iop]
                      ]
       ; update the beliefs of the proponent and the opponent
       let agree (agreementfactor epro  eop)
@@ -379,6 +400,8 @@ end
 to walk
     find-direction
     rt random undirectedness - random undirectedness
+    if [pcolor] of patch-ahead 2 = brown
+      [set heading (180 - heading)]
     fd random-float stepsize
 end
 
@@ -631,16 +654,16 @@ end
 
 to show-imp        ;; show a map of the importance values black red white for turtles
                    ;; black green white for patches
-  ask patches [set pcolor  scale-color green  (second item current-prop pprops) 0 1]
-  ask peoples [set color  scale-color red   (second item current-prop props) 1 -0]
+  ask patches [if pycor < 13 [set pcolor  scale-color green  (second item current-prop pprops) 0 1]]
+  ask peoples [if pycor < 13 [set color  scale-color red   (second item current-prop props) 1 -0]]
 end
 
 to show-evid       ;; show the evidence mode again
                    ;; show a map of the evidence values black yellow white for turtles
                    ;; black blue white for patches
 
-  ask patches [set pcolor  scale-color blue   (first item current-prop pprops) 0 1]
-  ask peoples [set color  scale-color yellow   (first item current-prop props) 1 -0]
+  ask patches [if pycor < 13 [set pcolor  scale-color blue   (first item current-prop pprops) 0 1]]
+    ask peoples [if pycor < 13 [set color  scale-color yellow   (first item current-prop props) 1 -0]]
 end
 
 to show-importance set viewmode false show-world end
@@ -814,12 +837,12 @@ to-report gini [Lin] ;; expects a list of values.
 
 to-report cohesion
   let evid 0 let cnt 0 ;; count number of patches with neighbour with opposite opinion
-  ask patches [
+  ask patches [if pycor < 13[
     set evid first item current-prop pprops
     if min [ (evid - 0.5) * (first item current-prop pprops - 0.5)] of neighbors < 0 [
       set cnt cnt + 1
     ]
-  ]
+  ]]
   report cnt / 1600 ;; count patches
 end
 
@@ -962,7 +985,7 @@ number-of-agents
 number-of-agents
 1
 100
-27.0
+28.0
 1
 1
 NIL
@@ -1026,7 +1049,7 @@ chance-announce
 chance-announce
 0
 100
-38.0
+48.0
 1
 1
 NIL
@@ -1167,7 +1190,7 @@ visual-horizon
 visual-horizon
 1
 20
-19.0
+20.0
 1
 1
 NIL
@@ -1197,7 +1220,7 @@ neutral-importance
 neutral-importance
 0.01
 0.99
-0.5
+0.25
 0.01
 1
 NIL
@@ -1233,7 +1256,7 @@ number-of-propositions
 number-of-propositions
 1
 10
-1.0
+4.0
 1
 1
 NIL
@@ -1401,7 +1424,7 @@ firmness-of-principle
 firmness-of-principle
 0
 10
-3.7
+3.8
 0.1
 1
 NIL
@@ -1526,7 +1549,7 @@ number-of-medias
 number-of-medias
 0
 100
-8.0
+1.0
 1
 1
 NIL
