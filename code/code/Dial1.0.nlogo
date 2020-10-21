@@ -63,6 +63,10 @@ to forget-announcements
   ]
 end
 
+to debug
+  print generateopinionsmedia
+end
+
 
 ; Dialogue Oriented
 
@@ -191,6 +195,7 @@ end
 
 ; Agent's Actions
 
+; new added
 to act-media
   set prior-size size
   let odd-announce random-float 1
@@ -454,7 +459,9 @@ to mutate
 end
 
 ; Convex opinion set routines
-
+; nondec -> increasing from first element
+; noninc -> decreasing from first element
+; ############### RENAME
 to-report nondec [n l h] ;number of elements lowest value highest value
   let v []
   repeat n [set v fput (random-float (h - l) + l) v]
@@ -462,7 +469,7 @@ to-report nondec [n l h] ;number of elements lowest value highest value
 end
 to-report noninc [n l h] ;number of elements lowest value highest value
   let v []
-  repeat n [set v fput (random-float (h - l) + l) v]
+  repeat n [set v fput (random-float (h - l) + l) v] ;create random number between 0 and h-l. Then, add l.
   report sort-by [ [?1 ?2] -> ?1 > ?2 ] v
 end
 
@@ -476,7 +483,7 @@ to-report hill [n] ;number of elements
   report sentence (nondec h 0 1)(noninc (n - h) 0 1)
 end
 
-to-report convexlist1 [n] ; purely random list
+to-report convexlist1 [n] ; ordered (by hill, increasing, or decreasing) list with purely random values
   ifelse n = 0 [report []]
      [report sentence random-float 1 convexlist (n - 1)]
 end
@@ -525,6 +532,21 @@ to-report generateopinions
   let imps []
   repeat number-of-props [ set imps fput (random-float 1) imps]
   report zip evids imps
+end
+
+; generate opinions for the media agents
+to-report generateopinionsmedia
+  let evids []
+  let imps []
+  repeat number-of-props [ set evids fput (cap (random-normal media-opinion-mean media-opinion-std) 0 1) evids]
+  repeat number-of-props [ set imps fput (random-float 1) imps]
+  report zip evids imps
+end
+
+to-report cap [n l u] ; number, lower bound, upper bound
+  if n > u [report u]
+  if n < l [report l]
+  report n
 end
 
 ; create groups
@@ -1256,7 +1278,7 @@ number-of-propositions
 number-of-propositions
 1
 10
-4.0
+10.0
 1
 1
 NIL
@@ -1549,8 +1571,55 @@ number-of-medias
 number-of-medias
 0
 100
-1.0
+0.0
 1
+1
+NIL
+HORIZONTAL
+
+BUTTON
+1208
+198
+1279
+231
+NIL
+debug
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+SLIDER
+1070
+20
+1326
+53
+media-opinion-mean
+media-opinion-mean
+0
+1
+1.0
+0.01
+1
+NIL
+HORIZONTAL
+
+SLIDER
+1069
+58
+1241
+91
+media-opinion-std
+media-opinion-std
+0
+1
+0.1
+0.01
 1
 NIL
 HORIZONTAL
