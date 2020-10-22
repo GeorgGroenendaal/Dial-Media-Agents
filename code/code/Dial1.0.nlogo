@@ -117,7 +117,7 @@ to setup
             ]
   create-medias number-of-medias [
               setxy (int (who - number-of-agents) * 5 - 20) 16
-              set props generateopinions ;; adjust this function for experiment
+              set props generateopinionsmedia ;; adjust this function for experiment
               set init-props props
               set announcements [] ;maybe remove ##################################
               set shape "target"
@@ -544,6 +544,7 @@ to-report generateopinionsmedia
 end
 
 to-report cap [n l u] ; number, lower bound, upper bound
+  ;randdom-float(max-min)+min
   if n > u [report u]
   if n < l [report l]
   report n
@@ -1056,7 +1057,7 @@ forgetspeed
 forgetspeed
 0
 0.005
-0.00106
+0.00157
 0.00001
 1
 NIL
@@ -1071,7 +1072,7 @@ chance-announce
 chance-announce
 0
 100
-48.0
+21.0
 1
 1
 NIL
@@ -1131,7 +1132,7 @@ chance-walk
 chance-walk
 0
 100
-48.0
+26.0
 1
 1
 NIL
@@ -1146,7 +1147,7 @@ chance-learn-by-neighbour
 chance-learn-by-neighbour
 0
 10
-0.0
+0.1
 0.1
 1
 NIL
@@ -1161,7 +1162,7 @@ chance-learn-by-environment
 chance-learn-by-environment
 0
 10
-1.0
+4.5
 0.1
 1
 NIL
@@ -1227,7 +1228,7 @@ chance-mutation
 chance-mutation
 0
 2
-0.0
+0.1
 0.02
 1
 NIL
@@ -1242,7 +1243,7 @@ neutral-importance
 neutral-importance
 0.01
 0.99
-0.25
+0.5
 0.01
 1
 NIL
@@ -1278,7 +1279,7 @@ number-of-propositions
 number-of-propositions
 1
 10
-10.0
+3.0
 1
 1
 NIL
@@ -1303,7 +1304,7 @@ chance-question
 chance-question
 0
 100
-0.0
+7.0
 1
 1
 NIL
@@ -1386,7 +1387,7 @@ attraction
 attraction
 0.0
 1
-0.47
+0.0
 0.01
 1
 NIL
@@ -1446,7 +1447,7 @@ firmness-of-principle
 firmness-of-principle
 0
 10
-3.8
+1.6
 0.1
 1
 NIL
@@ -1571,7 +1572,7 @@ number-of-medias
 number-of-medias
 0
 100
-0.0
+5.0
 1
 1
 NIL
@@ -1603,7 +1604,7 @@ media-opinion-mean
 media-opinion-mean
 0
 1
-1.0
+0.2
 0.01
 1
 NIL
