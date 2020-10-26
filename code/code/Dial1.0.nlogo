@@ -64,10 +64,6 @@ to forget-announcements
   ]
 end
 
-to debug
-  print generateopinionsmedia
-end
-
 
 ; Dialogue Oriented
 
@@ -209,37 +205,38 @@ to act-media
   ; give the media agent a reach based on their reputation
   ; media-reach determines fraction of patches reached
   let media-reach reputation-based-prob reputation
-  let number-of-reached-patches round(1600 * media-reach)
-  let startindex random 1600
+  let paps count patches with [pcolor != brown]; paps = patches in people space
+  ;print(paps)
+  let number-of-reached-patches round(paps * media-reach)
+  let startindex random paps
   let patchesaddressed []
   ; we start at a random index number (so we access different parts of space randomly)
   repeat number-of-reached-patches [
-    set patchesaddressed fput (startindex mod 1600) patchesaddressed 
+    set patchesaddressed fput (startindex mod paps) patchesaddressed 
     set startindex startindex + 1]
   let counter 0
   repeat number-of-reached-patches [adjust-patch-opinion counter patchesaddressed evidence set counter counter + 1]
 end
 
-to adjust-patch-opinion [cnt pa ev] ; cnt = counter, pin = patchesaddressed, ev = evidence 
-
-  ; The idea here is to adjust the evidence values of the patches 
-  ; slightly into the direction of the evidence proposed by the media agent
-  ; the formula used: po + (ev - po)* 0.1; po = patch-opinion; ev = evidence
-  ; reminder: evidence = opinion
-  ; the problem is that I cannot access the evidence values per patch
-  ; the patches that this function will address are from the function
-  ; patchesaddressed.
-
-  ; Below are code fragments that do not work ###############
-  ;let i item cnt pa
-  ;let po first first pprops ; po = patch-opinion
-  ;let newvalue po + (ev - po)* 0.1
-  ;ask patches[
-    ;repeat number-of-props [foreach pprops set pprops replace-item (po + (ev - po)* 0.1)]
-  ;] 
+to adjust-patch-opinion [cnt pa ev] ; cnt = counter, pa = indices of patches addressed, ev = evidence 
+  let patchindex item cnt pa
+  let patchxcor patchindex mod 33
+  let patchycor floor (patchindex / 33)
+  ask patches with [pxcor = patchxcor and pycor = patchycor] [
+   let i 0
+   loop[
+     let po item 0 item i pprops; po = patch evidence/opinion
+     let old-sublist item 0 pprops
+     set pprops replace-item 0 pprops (replace-item i old-sublist (po + (ev - po)* 0.01) )
+     ;i pprops (po + (ev - po)* 0.1) 
+     ; report replace-item index1 lists (replace-item index2 old-sublist value)
+     set i i + 1
+     if i = 2 [stop]
+    ]
+  ]
 end
 
-to-report reputation-based-prob [r];
+to-report reputation-based-prob [r] ; r = reputation of media agents
   let half-range 1 - r
   report r + random-float half-range - random-float half-range
 end
