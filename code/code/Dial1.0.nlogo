@@ -123,7 +123,7 @@ to setup
               set label who - number-of-people + 1
               set label-color 66
               set size 4
-              set reputation 0.5 ; all medias start with the same reputation
+              set reputation random-float 1; all medias start with the same reputation
   ]
   set totalsize  sum [size] of peoples
   setup-plot
@@ -208,18 +208,18 @@ to act-media
   ; we start at a random index number (so we don't depend on the order of the agentset)
   let startindex random number-of-people
   let peopleaddressed []
+  
+  ; combine loops into one
+  let counter 0
   repeat number-of-reached-people [
     set peopleaddressed fput (startindex mod number-of-people) peopleaddressed
     set startindex startindex + 1
-  ]
-  let counter 0
-  repeat number-of-reached-people [
     adjust-people-opinion counter peopleaddressed evidence random_prop_index
     set counter counter + 1
   ]
 end
 
-to adjust-people-opinion [cnt pa ev rprop] 
+to adjust-people-opinion [cnt pa ev rprop] ; cnt = counter pa = patches addressed ev = evidence rprop = random_prop_index
   let peopleindex item cnt pa
   ask people peopleindex [
     
@@ -228,10 +228,15 @@ to adjust-people-opinion [cnt pa ev rprop]
     
     ; #########
     ; This formula needs to be adjusted by the perceived media bias
-   
-    set props replace-item rprop props (replace-item 0 old-sublist (po + (ev - po)* 0.1))
+    
+    set props replace-item rprop props (replace-item 0 old-sublist (po + (ev - po)* media-impact))
   ]
 end
+
+; -1 to 1
+; -1 = gets influenced in opposite direction
+; 1 = influenced in media opinion direction
+; 0 = not influenced at all
 
 to init-perceived-media-bias
   
