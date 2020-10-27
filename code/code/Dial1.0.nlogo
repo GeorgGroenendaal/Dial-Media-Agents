@@ -100,7 +100,7 @@ to setup
   ask patches [if pycor >= 13 [set pcolor brown]]
   ask patches [if pycor < 13 [set pcolor blue]]
   ;; initialise people in a restricted y-coordinate range:
-  create-peoples number-of-agents [setxy random-xcor random-between (min-pycor + 0.5) (max-pycor - 8)
+  create-peoples number-of-people [setxy random-xcor random-between (min-pycor + 0.5) (max-pycor - 8)
               set props generateopinions
               set init-props props
               set announcements []
@@ -113,14 +113,14 @@ to setup
               set profit-strategy [0 0 0]
             ]
   create-medias number-of-medias [
-              setxy (int (who - number-of-agents) * 5 - 20) 16
+              setxy (int (who - number-of-people) * 5 - 20) 16
               set props generateopinionsmedia ;; adjust this function for experiment
               set init-props props
               set announcements [] ;maybe remove ##################################
               set shape "target"
               set color red
               ;set color  scale-color red first (item current-prop props)  1 0
-              set label who - number-of-agents + 1
+              set label who - number-of-people + 1
               set label-color 66
               set size 4
               set reputation 0.5 ; all medias start with the same reputation
@@ -194,31 +194,54 @@ end
 ; Agent's Actions
 
 ; new added
-  
-  
+
+
 to act-media
   set prior-size size
-  let randomindex random number-of-props
-  let evidence first item randomindex props
-  let importance second item randomindex props
-  
+  let random_prop_index random number-of-props
+  let evidence item random_prop_index props ;props is no longer a tuple for medias, only evidence stored
+
   ; give the media agent a reach based on their reputation
-  ; media-reach determines fraction of patches reached
+  ; media-reach determines fraction of people reached
   let media-reach reputation-based-prob reputation
-  let paps count patches with [pcolor != brown]; paps = patches in people space
-  ;print(paps)
-  let number-of-reached-patches round(paps * media-reach)
-  let startindex random paps
-  let patchesaddressed []
-  ; we start at a random index number (so we access different parts of space randomly)
-  repeat number-of-reached-patches [
-    set patchesaddressed fput (startindex mod paps) patchesaddressed 
-    set startindex startindex + 1]
+  let number-of-reached-people round(number-of-people * media-reach)
+  ; we start at a random index number (so we don't depend on the order of the agentset)
+  let startindex random number-of-people
+  let peopleaddressed []
+  repeat number-of-reached-people [
+    set peopleaddressed fput (startindex mod number-of-people) peopleaddressed
+    set startindex startindex + 1
+  ]
   let counter 0
-  repeat number-of-reached-patches [adjust-patch-opinion counter patchesaddressed evidence set counter counter + 1]
+  repeat number-of-reached-people [
+    adjust-people-opinion counter peopleaddressed evidence random_prop_index
+    set counter counter + 1
+  ]
 end
 
-to adjust-patch-opinion [cnt pa ev] ; cnt = counter, pa = indices of patches addressed, ev = evidence 
+to adjust-people-opinion [cnt pa ev rprop] 
+  let peopleindex item cnt pa
+  ask people peopleindex [
+    
+    let po item 0 item rprop props; po = people opinion
+    let old-sublist item rprop props
+    
+    ; #########
+    ; This formula needs to be adjusted by the perceived media bias
+   
+    set props replace-item rprop props (replace-item 0 old-sublist (po + (ev - po)* 0.1))
+  ]
+end
+
+to init-perceived-media-bias
+  
+end
+
+to adjust-influence-by-perceived-media-bias
+  
+end
+
+to adjust-patch-opinion [cnt pa ev] ; cnt = counter, pa = indices of patches addressed, ev = evidence
   let patchindex item cnt pa
   let patchxcor patchindex mod 33
   let patchycor floor (patchindex / 33)
@@ -228,7 +251,7 @@ to adjust-patch-opinion [cnt pa ev] ; cnt = counter, pa = indices of patches add
      let po item 0 item i pprops; po = patch evidence/opinion
      let old-sublist item 0 pprops
      set pprops replace-item 0 pprops (replace-item i old-sublist (po + (ev - po)* 0.01) )
-     ;i pprops (po + (ev - po)* 0.1) 
+     ;i pprops (po + (ev - po)* 0.1)
      ; report replace-item index1 lists (replace-item index2 old-sublist value)
      set i i + 1
      if i = 2 [stop]
@@ -281,7 +304,7 @@ end
 to update-announcement [w p ev i ] ; w = sender, p = proposition
   if breed = peoples [
   ; update memory
-  let key number-of-agents * p + w
+  let key number-of-people * p + w
   let loc find-location key announcements
   ifelse loc [set announcements
             replace-item loc announcements (list key (list ev i) ticks)
@@ -364,8 +387,8 @@ to answer-questions
 end
 
 to-report agrees [v] ; rank the announcements for attack
-   let i floor (first v / number-of-agents)
-   let t  (first v) mod number-of-agents
+   let i floor (first v / number-of-people)
+   let t  (first v) mod number-of-people
    ifelse [size] of turtle t < announce-threshold or distance turtle t < visual-horizon [report 1]
         [report agreementfactor (first item i props) first second v]
 end
@@ -377,11 +400,11 @@ to attack
      let key 0
      if item loc agree < 0 [
        set key first (item loc announcements)
- ;      create-link-to turtle (key mod number-of-agents) [set color 15]
-       ask turtle (key mod number-of-agents) [
-           set attacks fput (list myself floor (key / number-of-agents)) attacks]
+ ;      create-link-to turtle (key mod number-of-people) [set color 15]
+       ask turtle (key mod number-of-people) [
+           set attacks fput (list myself floor (key / number-of-people)) attacks]
 
-       show (word self " attacks " (key mod number-of-agents))
+       show (word self " attacks " (key mod number-of-people))
      ]
   ]
 end
@@ -568,10 +591,11 @@ end
 ; generate opinions for the media agents
 to-report generateopinionsmedia
   let evids []
-  let imps []
+  ;let imps []
   repeat number-of-props [ set evids fput (cap (random-normal media-opinion-mean media-opinion-std) 0 1) evids]
-  repeat number-of-props [ set imps fput (random-float 1) imps]
-  report zip evids imps
+  ;repeat number-of-props [ set imps fput (random-float 1) imps]
+  ;report zip evids imps
+  report evids
 end
 
 to-report cap [n l u] ; number, lower bound, upper bound
@@ -740,12 +764,12 @@ end
 
 to setup-plot
   set-current-plot "Distribution of Evidence"
-  set-plot-y-range 0 number-of-agents
+  set-plot-y-range 0 number-of-people
   set-plot-x-range 0 1.01
   set-histogram-num-bars 20
   set-current-plot "Importance Distribution"
   set-plot-x-range 0 1
-  set-plot-y-range 0 number-of-agents
+  set-plot-y-range 0 number-of-people
   set-histogram-num-bars 10
   set-current-plot plottitle
   set-plot-y-range 0 1
@@ -757,12 +781,12 @@ to setup-plotfile
                                     [first item current-prop props] of ?2 ] peoples
 
   set-current-plot "Distribution of Evidence"
-  set-plot-y-range 0 number-of-agents
+  set-plot-y-range 0 number-of-people
   set-plot-x-range 0 1
   set-histogram-num-bars 20
   set-current-plot "Importance Distribution"
   set-plot-x-range 0 1
-  set-plot-y-range 0 number-of-agents
+  set-plot-y-range 0 number-of-people
   set-histogram-num-bars 10
   set-current-plot plottitle
   set-plot-y-range 0 1
@@ -853,7 +877,7 @@ end
 
 
 to-report report-authority
-;   report max [size] of turtles / number-of-agents
+;   report max [size] of turtles / number-of-people
    report gini  [size] of peoples
 end
 
@@ -916,7 +940,7 @@ to-report avg-dist
 end
 
 to-report talking
-  report count peoples with [size > 1.3]  / number-of-agents
+  report count peoples with [size > 1.3]  / number-of-people
 end
 
 to-report ranks [n L] ;; n- aantal klassen L- data
