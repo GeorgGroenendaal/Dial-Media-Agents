@@ -241,24 +241,6 @@ to adjust-influence-by-perceived-media-bias
   
 end
 
-to adjust-patch-opinion [cnt pa ev] ; cnt = counter, pa = indices of patches addressed, ev = evidence
-  let patchindex item cnt pa
-  let patchxcor patchindex mod 33
-  let patchycor floor (patchindex / 33)
-  ask patches with [pxcor = patchxcor and pycor = patchycor] [
-   let i 0
-   loop[
-     let po item 0 item i pprops; po = patch evidence/opinion
-     let old-sublist item 0 pprops
-     set pprops replace-item 0 pprops (replace-item i old-sublist (po + (ev - po)* 0.01) )
-     ;i pprops (po + (ev - po)* 0.1)
-     ; report replace-item index1 lists (replace-item index2 old-sublist value)
-     set i i + 1
-     if i = 2 [stop]
-    ]
-  ]
-end
-
 to-report reputation-based-prob [r] ; r = reputation of media agents
   let half-range 1 - r
   report r + random-float half-range - random-float half-range
