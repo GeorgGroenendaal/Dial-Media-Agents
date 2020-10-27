@@ -9,6 +9,7 @@ peoples-own [
    questions        ; pairs: < requesting-agent prop >
    profit-strategy  ; list of learned profits of all strategy
    prior-size       ; prior size for profit
+   bias             ; perceived-media-bias (distributed randomly with perceived-bias-mean and perceived-bias std)
  ]
 medias-own [
    props            ; a list of pairs: < evidence importance >
@@ -22,7 +23,8 @@ patches-own [ pprops]
 globals [delta action-prob-pairs current-prop number-of-props total-odds totalsim totalsize filenaam agentsorderedatstart triangles strategy-shapes plottitle _recording-save-file-name]
 
 ; Utility functions
-to-report second [l] ; RENAME #################################
+to-report second [l] ; gets the second element of a list
+; often used to access the importance value of a proposition
 report item 1 l
 end
 
@@ -111,6 +113,7 @@ to setup
               set label-color 66
               set size (random-float 2) + 1
               set profit-strategy [0 0 0]
+              set bias generatebias
             ]
   create-medias number-of-medias [
               setxy (int (who - number-of-people) * 5 - 20) 16
@@ -208,8 +211,7 @@ to act-media
   ; we start at a random index number (so we don't depend on the order of the agentset)
   let startindex random number-of-people
   let peopleaddressed []
-  
-  ; combine loops into one
+
   let counter 0
   repeat number-of-reached-people [
     set peopleaddressed fput (startindex mod number-of-people) peopleaddressed
@@ -225,33 +227,35 @@ to adjust-people-opinion [cnt pa ev rprop] ; cnt = counter pa = patches addresse
     
     let po item 0 item rprop props; po = people opinion
     let old-sublist item rprop props
+    let change 0
     
-    ; #########
-    ; This formula needs to be adjusted by the perceived media bias
+    if abs(ev - po) > 0.1 [
+      set change ((ev - po) * media-impact * bias)
+    ]
     
-    set props replace-item rprop props (replace-item 0 old-sublist (po + (ev - po)* media-impact))
+    set props replace-item rprop props (replace-item 0 old-sublist (po + change))
   ]
 end
 
-; -1 to 1
-; -1 = gets influenced in opposite direction
-; 1 = influenced in media opinion direction
-; 0 = not influenced at all
-
-to init-perceived-media-bias
+to-report generatebias
+  let half-range 0
+  ; determine the closest boundary and the distance to it (half-range)
+  ifelse perceived-bias-mean < 0 
+  [set half-range 1 + perceived-bias-mean] ;pbm is negative
+  [set half-range 1 - perceived-bias-mean] ;pbm is positive
   
-end
-
-to adjust-influence-by-perceived-media-bias
-  
+  let gbias perceived-bias-mean + (random-float half-range - random-float half-range) * perceived-bias-std
+  report gbias
 end
 
 to-report reputation-based-prob [r] ; r = reputation of media agents
-  let half-range 1 - r
+  let half-range 0
+  ifelse r > 0.5
+  [set half-range 1 - r]
+  [set half-range r]
+
   report r + random-float half-range - random-float half-range
 end
-
-
 
 to announce ;turtle procedure
  if size > announce-threshold [
@@ -575,21 +579,15 @@ to-report generateopinions
   report zip evids imps
 end
 
-; generate opinions for the media agents
 to-report generateopinionsmedia
   let evids []
-  ;let imps []
-  repeat number-of-props [ set evids fput (cap (random-normal media-opinion-mean media-opinion-std) 0 1) evids]
-  ;repeat number-of-props [ set imps fput (random-float 1) imps]
-  ;report zip evids imps
+  let half-range 0
+  ifelse media-opinion-mean > 0.5
+  [set half-range 1 - media-opinion-mean]
+  [set half-range media-opinion-mean]
+  
+  repeat number-of-props [ set evids fput (media-opinion-mean + (random-float half-range - random-float half-range) * media-opinion-std) evids]
   report evids
-end
-
-to-report cap [n l u] ; number, lower bound, upper bound
-  ;randdom-float(max-min)+min
-  if n > u [report u]
-  if n < l [report l]
-  report n
 end
 
 ; create groups
