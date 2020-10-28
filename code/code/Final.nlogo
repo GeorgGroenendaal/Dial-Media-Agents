@@ -1667,7 +1667,7 @@ number-of-medias
 number-of-medias
 0
 9
-7.0
+3.0
 1
 1
 NIL
@@ -1682,7 +1682,7 @@ media-opinion-mean
 media-opinion-mean
 0
 1
-0.5
+0.49
 0.01
 1
 NIL
@@ -1787,25 +1787,25 @@ PENS
 @#$#@#$#@
 ## WHAT IS IT?
 
-This model is a demonstration of group formation of communicating agents. The collective memory is implemented in the patches. There is only one proposition. Whoever has evidence in favour of it paints the world from blue to white when she announces her opinion. And who has evidence against it paint their environment from blue to black when revealing her opinion.  
+This model is a demonstration of group formation of communicating agents. The collective memory is implemented in the patches. There is only one proposition. Whoever has evidence in favour of it paints the world from blue to white when she announces her opinion. And who has evidence against it paint their environment from blue to black when revealing her opinion.
 The borders of the agents also represent the evidence in favour or against the proposition.
 
 ## HOW IT WORKS
 
 The model starts with a random distribution  agents with random evidence and importance values. The evidence ranges from -1 to 1. 1 means pro a proposition (white); -1 is contra (black) and 0 (blue) is no clue. Importance ranges from 0 to 1
  Turtles move in the direction of a patch that is most similar to their opinion or paint the world. Similarity is defined by the carthesian distance:
- sqrt( (e1 - e2)^2 + (i1 - i2)^2).  
+ sqrt( (e1 - e2)^2 + (i1 - i2)^2).
 Agents make announcements and the patches in the neighbourhood of the announcers (environment), remember that information for some time.
 
 ## HOW TO USE IT
 
-The NUMBER slider sets the number of turtles.   
+The NUMBER slider sets the number of turtles.
 The LOUDNESS slider determines the distance an announcement  travels away from the announcer.
 
 The SETUP button initializes the model, and GO runs the model.
 
-While running the world only shows the evidence values. To se the importance of the message:  press SHOW-IMPORTANCE to see those values for patches and agents.  
-Press SHOW-EVIDENCE toswitch back to the evidence presentation.  
+While running the world only shows the evidence values. To se the importance of the message:  press SHOW-IMPORTANCE to see those values for patches and agents.
+Press SHOW-EVIDENCE toswitch back to the evidence presentation.
 Hint: Not pressing SHOW-EVIDENCE followed by the GO button repaints the patches with the evidence color, but the turtles keep the importance representation.
 
 The ALARM monitor should always be 0. If the value is different then there is code executed, in the announce procedure, that should not have been executed. Maybe this is useful for you too Corinna.
@@ -1816,13 +1816,13 @@ LOUDNESS
 STEPSIZE
         - the maximum distance an agent travels in one round.
 
-VISUAL-MEMORY   - determines how far an agent look foor the best place to go.  
-UNDIRECTEDNESS  - the wobling angle, i.e. the inverse of the chance to get to the best place.  
+VISUAL-MEMORY   - determines how far an agent look foor the best place to go.
+UNDIRECTEDNESS  - the wobling angle, i.e. the inverse of the chance to get to the best place.
 CHANCE-WALK
      - determines the chance an agent makes a step instead of doing something else.
 
-CHANCE-ANNOUNCE - determines the chance an agent makes an announcement. The only other option is to walk in the direction of similar patch.  
-CHANCE-LEARN-BY-NEIGHBOUR - the agent copies the evidence and importance values from a neighbour.  
+CHANCE-ANNOUNCE - determines the chance an agent makes an announcement. The only other option is to walk in the direction of similar patch.
+CHANCE-LEARN-BY-NEIGHBOUR - the agent copies the evidence and importance values from a neighbour.
 CHANCE-LEARN-BY-MEMORY
     - the agent copies the evidence and importance values from the patch it is standing on.
 
@@ -1836,9 +1836,9 @@ NEUTRAL-IMPORTANCE - The default background importance of the patches that forgo
 
 ## THINGS TO NOTICE
 
-The formation of groups, tight and loose. There are even wanderers.  
-Forgetting, announcing, but with a low voice, are real space makers!  
-What we learn from this? A lot about what agents can do without actually reasoning.  
+The formation of groups, tight and loose. There are even wanderers.
+Forgetting, announcing, but with a low voice, are real space makers!
+What we learn from this? A lot about what agents can do without actually reasoning.
 Well reasoning is supposed to make it more intelligent, so this is our point of departure.
 
 ## THINGS TO TRY
@@ -1847,14 +1847,14 @@ Slide the sliders. Check importance to see for those values. Try to create the r
 
 ## EXTENDING THE MODEL
 
-More propositions.   
-Asking.  
-Memory (forgetting) for the agents.  
+More propositions.
+Asking.
+Memory (forgetting) for the agents.
 Trust and dialogues.
 
 ## RELATED MODELS
 
-GenDrift (P Global)  
+GenDrift (P Global)
 Segregation
 
 ## CREDITS AND REFERENCES
