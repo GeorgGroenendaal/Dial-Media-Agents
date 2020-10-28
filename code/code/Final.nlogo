@@ -2,6 +2,7 @@ extensions [array vid]
 breed [medias media]
 breed [peoples people]
 peoples-own [
+   bias             ; perceived media bias
    props            ; a list of pairs: < evidence importance >
    init-props       ; a list of pairs: < evidence importance > the initial values
    announcements    ; a list of 4-tuples: < key <evidence importance> ticks trust>
@@ -15,6 +16,7 @@ medias-own [
    init-props       ; a list of pairs: < evidence importance > the initial values
    announcements    ; a list of 4-tuples: < key <evidence importance> ticks trust>
    prior-size       ; prior size for profit
+   reputation       ; determines how likely media agents reach others
  ]
 patches-own [ pprops]
 
@@ -63,10 +65,6 @@ to forget-announcements
   ]
 end
 
-to debug
-  print generateopinionsmedia
-end
-
 
 ; Dialogue Oriented
 
@@ -103,7 +101,8 @@ to setup
   ask patches [if pycor >= 13 [set pcolor brown]]
   ask patches [if pycor < 13 [set pcolor blue]]
   ;; initialise people in a restricted y-coordinate range:
-  create-peoples number-of-agents [setxy random-xcor random-between (min-pycor + 0.5) (max-pycor - 8)
+  create-peoples number-of-people [setxy random-xcor random-between (min-pycor + 0.5) (max-pycor - 8)
+              set bias generatebias
               set props generateopinions
               set init-props props
               set announcements []
@@ -116,19 +115,21 @@ to setup
               set profit-strategy [0 0 0]
             ]
   create-medias number-of-medias [
-              setxy (int (who - number-of-agents) * 5 - 20) 16
+              setxy (int (who - number-of-people) * 5 - 20) 16
               set props generateopinionsmedia ;; adjust this function for experiment
               set init-props props
               set announcements [] ;maybe remove ##################################
               set shape "target"
-              set color red
+              set color 15 + (who - number-of-people) * 10
               ;set color  scale-color red first (item current-prop props)  1 0
-              set label who - number-of-agents + 1
+              set label who - number-of-people + 1
               set label-color 66
               set size 4
+              set reputation 0.5 + random-float 0.5 - random-float 0.5; all medias start with the same reputation
   ]
   set totalsize  sum [size] of peoples
   setup-plot
+  setup-plot-media
   ;update-plotfile ;; !!!!!!!
 end
 
@@ -144,6 +145,7 @@ to-report find-action [c l]
 end
 
 to go
+   ask medias [act-media]
    set total-odds 0
    set action-prob-pairs (map [ [?1 ?2] -> list (incr-total-odds ?1) ?2 ]
          (list chance-announce chance-question chance-attack chance-walk chance-learn-by-neighbour
@@ -152,7 +154,6 @@ to go
               "learn-by-environment" "mutate" "change-strategy" ))
    set totalsim 0
    ask peoples [act]
-   ask medias [act-media]
    ask patches [if pycor < 13  ; to forget
     [set pprops map [ ?1 -> list (forget-pevidence first ?1) (forget-pimportance second ?1) ] pprops ]]
 
@@ -196,18 +197,84 @@ end
 ; Agent's Actions
 
 ; new added
+
+
 to act-media
   set prior-size size
-  let odd-announce random-float 1
-  let w who
-  let p 0
-  let evidence first first props
-  let importance second first props
-  if odd-announce > 0.4[
-    ask other peoples
-         [ update-announcement w p evidence importance]
-         print("QAnon is real")
+  let random_prop_index random number-of-props
+  let evidence item random_prop_index props ;props is no longer a tuple for medias, only evidence stored
+
+  ; give the media agent a reach based on their reputation
+  ; media-reach determines fraction of people reached
+  let media-reach reputation-based-prob reputation
+  let number-of-reached-people round(number-of-people * media-reach)
+  ; we start at a random index number (so we don't depend on the order of the agentset)
+  let startindex random number-of-people
+  let peopleaddressed []
+  repeat number-of-reached-people [
+    set peopleaddressed fput (startindex mod number-of-people) peopleaddressed
+    set startindex startindex + 1
   ]
+  let counter 0
+  repeat number-of-reached-people [
+    adjust-people-opinion counter peopleaddressed evidence random_prop_index
+    set counter counter + 1
+  ]
+  ; Mock reputation modifier
+  ;set reputation 5 + random-float 5 - random-float 5
+end
+
+to adjust-people-opinion [cnt pa ev rprop]
+  let peopleindex item cnt pa
+  ask people peopleindex [
+
+    let po item 0 item rprop props; po = people opinion
+    let old-sublist item rprop props
+
+    ; #########
+    ; This formula needs to be adjusted by the perceived media bias
+    let marker 1
+    if ev > po [set marker 0]
+    if abs(ev - po) > 0.1 [
+      set po po + (0.1 / (ev - po))* media-impact * bias
+    ]
+    if marker = 1 and ev > po [set po ev]
+    if marker = 0 and ev < po [set po ev]
+    if po >= 1 [set po 0.99]
+    if po <= 0 [set po 0.01]
+    set props replace-item rprop props (replace-item 0 old-sublist po)
+  ]
+end
+
+to init-perceived-media-bias
+
+end
+
+to adjust-influence-by-perceived-media-bias
+
+end
+
+to adjust-patch-opinion [cnt pa ev] ; cnt = counter, pa = indices of patches addressed, ev = evidence
+  let patchindex item cnt pa
+  let patchxcor patchindex mod 33
+  let patchycor floor (patchindex / 33)
+  ask patches with [pxcor = patchxcor and pycor = patchycor] [
+   let i 0
+   loop[
+     let po item 0 item i pprops; po = patch evidence/opinion
+     let old-sublist item 0 pprops
+     set pprops replace-item 0 pprops (replace-item i old-sublist (po + (ev - po)* 0.01) )
+     ;i pprops (po + (ev - po)* 0.1)
+     ; report replace-item index1 lists (replace-item index2 old-sublist value)
+     set i i + 1
+     if i = 2 [stop]
+    ]
+  ]
+end
+
+to-report reputation-based-prob [r] ; r = reputation of media agents
+  let half-range 1 - r
+  report r + random-float half-range - random-float half-range
 end
 
 
@@ -222,6 +289,9 @@ to announce ;turtle procedure
       let choice-inc second first props ;importance value of the first item of the props list
       while [choice >= choice-inc] [
         set p p + 1
+        if p > number-of-propositions [ stop ]
+        print(p)
+      print(props)
         set choice-inc choice-inc + second item p props ;adds the importance of the propositions we loop through
       ]
   ; opinions with a higher importance have a highe probability of being chosen (code above)
@@ -250,7 +320,7 @@ end
 to update-announcement [w p ev i ] ; w = sender, p = proposition
   if breed = peoples [
   ; update memory
-  let key number-of-agents * p + w
+  let key number-of-people * p + w
   let loc find-location key announcements
   ifelse loc [set announcements
             replace-item loc announcements (list key (list ev i) ticks)
@@ -333,8 +403,8 @@ to answer-questions
 end
 
 to-report agrees [v] ; rank the announcements for attack
-   let i floor (first v / number-of-agents)
-   let t  (first v) mod number-of-agents
+   let i floor (first v / number-of-people)
+   let t  (first v) mod number-of-people
    ifelse [size] of turtle t < announce-threshold or distance turtle t < visual-horizon [report 1]
         [report agreementfactor (first item i props) first second v]
 end
@@ -346,11 +416,11 @@ to attack
      let key 0
      if item loc agree < 0 [
        set key first (item loc announcements)
- ;      create-link-to turtle (key mod number-of-agents) [set color 15]
-       ask turtle (key mod number-of-agents) [
-           set attacks fput (list myself floor (key / number-of-agents)) attacks]
+ ;      create-link-to turtle (key mod number-of-people) [set color 15]
+       ask turtle (key mod number-of-people) [
+           set attacks fput (list myself floor (key / number-of-people)) attacks]
 
-       show (word self " attacks " (key mod number-of-agents))
+       show (word self " attacks " (key mod number-of-people))
      ]
   ]
 end
@@ -527,6 +597,16 @@ to setopinion [p evi] ; prop evidence importance
 ;set props replace-item p props evi
 end
 
+to-report generatebias
+  let half-range 0
+  ifelse perceived-bias-mean < 0 [
+    set half-range 1 + perceived-bias-mean][ ;pbm is negative
+    set half-range 1 - perceived-bias-mean   ;pbm is positive
+  ]
+  let gbias perceived-bias-mean + (random-float half-range - random-float half-range) * perceived-bias-std
+  report gbias
+end
+
 to-report generateopinions
   let evids convexlist number-of-props
   let imps []
@@ -537,10 +617,11 @@ end
 ; generate opinions for the media agents
 to-report generateopinionsmedia
   let evids []
-  let imps []
+  ;let imps []
   repeat number-of-props [ set evids fput (cap (random-normal media-opinion-mean media-opinion-std) 0 1) evids]
-  repeat number-of-props [ set imps fput (random-float 1) imps]
-  report zip evids imps
+  ;repeat number-of-props [ set imps fput (random-float 1) imps]
+  ;report zip evids imps
+  report evids
 end
 
 to-report cap [n l u] ; number, lower bound, upper bound
@@ -673,6 +754,7 @@ to show-world
                           (number-of-props - 1))
   ifelse viewmode [show-evid][show-imp]
   update-plot
+  update-plot-medias
 end
 
 to show-imp        ;; show a map of the importance values black red white for turtles
@@ -709,12 +791,12 @@ end
 
 to setup-plot
   set-current-plot "Distribution of Evidence"
-  set-plot-y-range 0 number-of-agents
+  set-plot-y-range 0 number-of-people
   set-plot-x-range 0 1.01
   set-histogram-num-bars 20
   set-current-plot "Importance Distribution"
   set-plot-x-range 0 1
-  set-plot-y-range 0 number-of-agents
+  set-plot-y-range 0 number-of-people
   set-histogram-num-bars 10
   set-current-plot plottitle
   set-plot-y-range 0 1
@@ -726,12 +808,12 @@ to setup-plotfile
                                     [first item current-prop props] of ?2 ] peoples
 
   set-current-plot "Distribution of Evidence"
-  set-plot-y-range 0 number-of-agents
+  set-plot-y-range 0 number-of-people
   set-plot-x-range 0 1
   set-histogram-num-bars 20
   set-current-plot "Importance Distribution"
   set-plot-x-range 0 1
-  set-plot-y-range 0 number-of-agents
+  set-plot-y-range 0 number-of-people
   set-histogram-num-bars 10
   set-current-plot plottitle
   set-plot-y-range 0 1
@@ -756,6 +838,19 @@ to update-plot
     set tmp  report-iopop plot tmp
     set-current-plot-pen "Importance Distribution" ;; yellow
     set tmp  report-giniimp plot tmp
+end
+
+to setup-plot-media
+  set-current-plot "Distribution of Evidence for Media"
+  set-plot-y-range 0 number-of-medias
+  set-plot-x-range 0 1.01
+  set-histogram-num-bars 20
+end
+
+to update-plot-medias
+  let tmp 0
+  set-current-plot "Distribution of Evidence for Media"
+    histogram [item current-prop props] of medias
 end
 
 to update-plotfile
@@ -822,7 +917,7 @@ end
 
 
 to-report report-authority
-;   report max [size] of turtles / number-of-agents
+;   report max [size] of turtles / number-of-people
    report gini  [size] of peoples
 end
 
@@ -885,7 +980,7 @@ to-report avg-dist
 end
 
 to-report talking
-  report count peoples with [size > 1.3]  / number-of-agents
+  report count peoples with [size > 1.3]  / number-of-people
 end
 
 to-report ranks [n L] ;; n- aantal klassen L- data
@@ -1004,8 +1099,8 @@ SLIDER
 10
 189
 43
-number-of-agents
-number-of-agents
+number-of-people
+number-of-people
 1
 100
 28.0
@@ -1564,36 +1659,19 @@ Opinion & Size related
 1
 
 SLIDER
-1213
-104
-1385
-137
+1071
+112
+1243
+145
 number-of-medias
 number-of-medias
 0
-100
-5.0
+9
+3.0
 1
 1
 NIL
 HORIZONTAL
-
-BUTTON
-1208
-198
-1279
-231
-NIL
-debug
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
 
 SLIDER
 1070
@@ -1604,7 +1682,7 @@ media-opinion-mean
 media-opinion-mean
 0
 1
-0.2
+0.49
 0.01
 1
 NIL
@@ -1619,34 +1697,115 @@ media-opinion-std
 media-opinion-std
 0
 1
-0.1
+0.6
 0.01
 1
 NIL
 HORIZONTAL
 
+SLIDER
+1074
+178
+1246
+211
+perceived-bias-mean
+perceived-bias-mean
+-1
+1
+0.2
+0.1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+1075
+219
+1247
+252
+perceived-bias-std
+perceived-bias-std
+0
+1
+1.0
+0.01
+1
+NIL
+HORIZONTAL
+
+SLIDER
+1076
+261
+1248
+294
+media-impact
+media-impact
+0
+1
+0.09
+0.01
+1
+NIL
+HORIZONTAL
+
+PLOT
+1080
+334
+1374
+577
+Reputation of agents
+NIL
+NIL
+0.4
+0.6
+0.3
+0.5
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "ask medias [ set-plot-pen-color color plotxy ticks reputation ]"
+
+PLOT
+1080
+604
+1280
+754
+Distribution of Evidence for Media
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 1 -16777216 true "" ""
+
 @#$#@#$#@
 ## WHAT IS IT?
 
-This model is a demonstration of group formation of communicating agents. The collective memory is implemented in the patches. There is only one proposition. Whoever has evidence in favour of it paints the world from blue to white when she announces her opinion. And who has evidence against it paint their environment from blue to black when revealing her opinion.  
+This model is a demonstration of group formation of communicating agents. The collective memory is implemented in the patches. There is only one proposition. Whoever has evidence in favour of it paints the world from blue to white when she announces her opinion. And who has evidence against it paint their environment from blue to black when revealing her opinion.
 The borders of the agents also represent the evidence in favour or against the proposition.
 
 ## HOW IT WORKS
 
 The model starts with a random distribution  agents with random evidence and importance values. The evidence ranges from -1 to 1. 1 means pro a proposition (white); -1 is contra (black) and 0 (blue) is no clue. Importance ranges from 0 to 1
  Turtles move in the direction of a patch that is most similar to their opinion or paint the world. Similarity is defined by the carthesian distance:
- sqrt( (e1 - e2)^2 + (i1 - i2)^2).  
+ sqrt( (e1 - e2)^2 + (i1 - i2)^2).
 Agents make announcements and the patches in the neighbourhood of the announcers (environment), remember that information for some time.
 
 ## HOW TO USE IT
 
-The NUMBER slider sets the number of turtles.   
+The NUMBER slider sets the number of turtles.
 The LOUDNESS slider determines the distance an announcement  travels away from the announcer.
 
 The SETUP button initializes the model, and GO runs the model.
 
-While running the world only shows the evidence values. To se the importance of the message:  press SHOW-IMPORTANCE to see those values for patches and agents.  
-Press SHOW-EVIDENCE toswitch back to the evidence presentation.  
+While running the world only shows the evidence values. To se the importance of the message:  press SHOW-IMPORTANCE to see those values for patches and agents.
+Press SHOW-EVIDENCE toswitch back to the evidence presentation.
 Hint: Not pressing SHOW-EVIDENCE followed by the GO button repaints the patches with the evidence color, but the turtles keep the importance representation.
 
 The ALARM monitor should always be 0. If the value is different then there is code executed, in the announce procedure, that should not have been executed. Maybe this is useful for you too Corinna.
@@ -1657,13 +1816,13 @@ LOUDNESS
 STEPSIZE
         - the maximum distance an agent travels in one round.
 
-VISUAL-MEMORY   - determines how far an agent look foor the best place to go.  
-UNDIRECTEDNESS  - the wobling angle, i.e. the inverse of the chance to get to the best place.  
+VISUAL-MEMORY   - determines how far an agent look foor the best place to go.
+UNDIRECTEDNESS  - the wobling angle, i.e. the inverse of the chance to get to the best place.
 CHANCE-WALK
      - determines the chance an agent makes a step instead of doing something else.
 
-CHANCE-ANNOUNCE - determines the chance an agent makes an announcement. The only other option is to walk in the direction of similar patch.  
-CHANCE-LEARN-BY-NEIGHBOUR - the agent copies the evidence and importance values from a neighbour.  
+CHANCE-ANNOUNCE - determines the chance an agent makes an announcement. The only other option is to walk in the direction of similar patch.
+CHANCE-LEARN-BY-NEIGHBOUR - the agent copies the evidence and importance values from a neighbour.
 CHANCE-LEARN-BY-MEMORY
     - the agent copies the evidence and importance values from the patch it is standing on.
 
@@ -1677,9 +1836,9 @@ NEUTRAL-IMPORTANCE - The default background importance of the patches that forgo
 
 ## THINGS TO NOTICE
 
-The formation of groups, tight and loose. There are even wanderers.  
-Forgetting, announcing, but with a low voice, are real space makers!  
-What we learn from this? A lot about what agents can do without actually reasoning.  
+The formation of groups, tight and loose. There are even wanderers.
+Forgetting, announcing, but with a low voice, are real space makers!
+What we learn from this? A lot about what agents can do without actually reasoning.
 Well reasoning is supposed to make it more intelligent, so this is our point of departure.
 
 ## THINGS TO TRY
@@ -1688,14 +1847,14 @@ Slide the sliders. Check importance to see for those values. Try to create the r
 
 ## EXTENDING THE MODEL
 
-More propositions.   
-Asking.  
-Memory (forgetting) for the agents.  
+More propositions.
+Asking.
+Memory (forgetting) for the agents.
 Trust and dialogues.
 
 ## RELATED MODELS
 
-GenDrift (P Global)  
+GenDrift (P Global)
 Segregation
 
 ## CREDITS AND REFERENCES
