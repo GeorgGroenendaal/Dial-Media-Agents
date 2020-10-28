@@ -230,9 +230,13 @@ to adjust-people-opinion [cnt pa ev rprop]
 
     ; #########
     ; This formula needs to be adjusted by the perceived media bias
+    let marker 1
+    if ev > po [set marker 0]
     if abs(ev - po) > 0.1 [
-      set po po + (ev - po)* media-impact * bias
+      set po po + (0.1 / (ev - po))* media-impact * bias
     ]
+    if marker = 1 and ev > po [set po ev]
+    if marker = 0 and ev < po [set po ev]
     if po >= 1 [set po 0.99]
     if po <= 0 [set po 0.01]
     set props replace-item rprop props (replace-item 0 old-sublist po)
@@ -1661,7 +1665,7 @@ media-opinion-mean
 media-opinion-mean
 0
 1
-0.5
+0.54
 0.01
 1
 NIL
@@ -1676,7 +1680,7 @@ media-opinion-std
 media-opinion-std
 0
 1
-1.0
+0.17
 0.01
 1
 NIL
@@ -1721,7 +1725,7 @@ media-impact
 media-impact
 0
 1
-0.09
+0.17
 0.01
 1
 NIL
