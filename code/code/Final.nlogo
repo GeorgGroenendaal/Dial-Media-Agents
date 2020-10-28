@@ -120,7 +120,7 @@ to setup
               set init-props props
               set announcements [] ;maybe remove ##################################
               set shape "target"
-              set color red
+              set color 15 + (who - number-of-people) * 10
               ;set color  scale-color red first (item current-prop props)  1 0
               set label who - number-of-people + 1
               set label-color 66
@@ -219,6 +219,8 @@ to act-media
     adjust-people-opinion counter peopleaddressed evidence random_prop_index
     set counter counter + 1
   ]
+
+  set reputation 5 + random-float 5 - random-float 5
 end
 
 to adjust-people-opinion [cnt pa ev rprop]
@@ -1726,6 +1728,24 @@ media-impact
 1
 NIL
 HORIZONTAL
+
+PLOT
+1080
+334
+1280
+484
+Reputation of agends
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "ask medias [ set-plot-pen-color color plotxy ticks reputation ]"
 
 @#$#@#$#@
 ## WHAT IS IT?
