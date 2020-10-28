@@ -129,6 +129,7 @@ to setup
   ]
   set totalsize  sum [size] of peoples
   setup-plot
+  setup-plot-media
   ;update-plotfile ;; !!!!!!!
 end
 
@@ -219,8 +220,8 @@ to act-media
     adjust-people-opinion counter peopleaddressed evidence random_prop_index
     set counter counter + 1
   ]
-
-  set reputation 5 + random-float 5 - random-float 5
+  ; Mock reputation modifier
+  ;set reputation 5 + random-float 5 - random-float 5
 end
 
 to adjust-people-opinion [cnt pa ev rprop]
@@ -749,6 +750,7 @@ to show-world
                           (number-of-props - 1))
   ifelse viewmode [show-evid][show-imp]
   update-plot
+  update-plot-medias
 end
 
 to show-imp        ;; show a map of the importance values black red white for turtles
@@ -832,6 +834,19 @@ to update-plot
     set tmp  report-iopop plot tmp
     set-current-plot-pen "Importance Distribution" ;; yellow
     set tmp  report-giniimp plot tmp
+end
+
+to setup-plot-media
+  set-current-plot "Distribution of Evidence for Media"
+  set-plot-y-range 0 number-of-medias
+  set-plot-x-range 0 1.01
+  set-histogram-num-bars 20
+end
+
+to update-plot-medias
+  let tmp 0
+  set-current-plot "Distribution of Evidence for Media"
+    histogram [item current-prop props] of medias
 end
 
 to update-plotfile
@@ -1648,7 +1663,7 @@ number-of-medias
 number-of-medias
 0
 9
-3.0
+6.0
 1
 1
 NIL
@@ -1663,7 +1678,7 @@ media-opinion-mean
 media-opinion-mean
 0
 1
-0.5
+0.49
 0.01
 1
 NIL
@@ -1678,7 +1693,7 @@ media-opinion-std
 media-opinion-std
 0
 1
-1.0
+0.6
 0.01
 1
 NIL
@@ -1693,7 +1708,7 @@ perceived-bias-mean
 perceived-bias-mean
 -1
 1
-0.0
+0.2
 0.1
 1
 NIL
@@ -1734,7 +1749,7 @@ PLOT
 334
 1280
 484
-Reputation of agends
+Reputation of agents
 NIL
 NIL
 0.0
@@ -1746,6 +1761,24 @@ false
 "" ""
 PENS
 "default" 1.0 0 -16777216 true "" "ask medias [ set-plot-pen-color color plotxy ticks reputation ]"
+
+PLOT
+1080
+492
+1280
+642
+Distribution of Evidence for Media
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 1 -16777216 true "" ""
 
 @#$#@#$#@
 ## WHAT IS IT?
