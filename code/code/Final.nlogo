@@ -2,6 +2,7 @@ extensions [array vid]
 breed [medias media]
 breed [peoples people]
 peoples-own [
+   id               ; personal idendity
    bias             ; perceived media bias
    props            ; a list of pairs: < evidence importance >
    init-props       ; a list of pairs: < evidence importance > the initial values
@@ -20,7 +21,7 @@ medias-own [
  ]
 patches-own [ pprops]
 
-globals [delta action-prob-pairs current-prop number-of-props total-odds totalsim totalsize filenaam agentsorderedatstart triangles strategy-shapes plottitle _recording-save-file-name]
+globals [delta action-prob-pairs current-prop number-of-props total-odds totalsim totalsize filenaam agentsorderedatstart triangles strategy-shapes plottitle _recording-save-file-name idstart]
 
 ; Utility functions
 to-report second [l] ; RENAME #################################
@@ -101,7 +102,12 @@ to setup
   ask patches [if pycor >= 13 [set pcolor brown]]
   ask patches [if pycor < 13 [set pcolor blue]]
   ;; initialise people in a restricted y-coordinate range:
+
+  ;;id for people
+  set idstart 1
+
   create-peoples number-of-people [setxy random-xcor random-between (min-pycor + 0.5) (max-pycor - 8)
+              set id generateid
               set bias generatebias
               set props generateopinions
               set init-props props
@@ -130,6 +136,7 @@ to setup
   set totalsize  sum [size] of peoples
   setup-plot
   setup-plot-media
+  setup-plot-peoples
   ;update-plotfile ;; !!!!!!!
 end
 
@@ -597,6 +604,16 @@ to setopinion [p evi] ; prop evidence importance
 ;set props replace-item p props evi
 end
 
+
+to-report generateid
+  let currentid idstart
+  ifelse (idstart mod 5) = 0 [
+    set idstart (idstart + 6)]
+  [ set idstart (idstart + 2)]
+  report currentid
+end
+
+
 to-report generatebias
   let half-range 0
   ifelse perceived-bias-mean < 0 [
@@ -755,6 +772,7 @@ to show-world
   ifelse viewmode [show-evid][show-imp]
   update-plot
   update-plot-medias
+  update-plot-peoples
 end
 
 to show-imp        ;; show a map of the importance values black red white for turtles
@@ -823,9 +841,9 @@ to update-plot
   let tmp 0
   set-current-plot "Distribution of Evidence"
     histogram [first item current-prop props] of peoples
-    set-current-plot "Importance Distribution"
+  set-current-plot "Importance Distribution"
     histogram [second item current-prop props] of peoples
- set-current-plot plottitle
+  set-current-plot plottitle
     set-current-plot-pen "Reputation Distribution";; black
     set tmp report-authority plot tmp
     set-current-plot-pen "Spatial Distribution" ;;"friend ratio" ;; green
@@ -838,6 +856,23 @@ to update-plot
     set tmp  report-iopop plot tmp
     set-current-plot-pen "Importance Distribution" ;; yellow
     set tmp  report-giniimp plot tmp
+end
+
+to setup-plot-peoples
+  set-current-plot "Peoples opinions"
+  set-plot-y-range 0 1
+  set-plot-x-range 0 1
+end
+
+to update-plot-peoples
+  let tmp 0
+  set-current-plot "Peoples opinions"
+  let index 0
+  ask peoples [
+    create-temporary-plot-pen (word who)
+    set-plot-pen-color id
+    plotxy ticks first first props
+  ]
 end
 
 to setup-plot-media
@@ -1103,7 +1138,7 @@ number-of-people
 number-of-people
 1
 100
-28.0
+27.0
 1
 1
 NIL
@@ -1152,7 +1187,7 @@ forgetspeed
 forgetspeed
 0
 0.005
-0.00157
+0.00106
 0.00001
 1
 NIL
@@ -1167,7 +1202,7 @@ chance-announce
 chance-announce
 0
 100
-21.0
+38.0
 1
 1
 NIL
@@ -1197,7 +1232,7 @@ stepsize
 stepsize
 0
 2
-0.7
+0.8
 0.02
 1
 NIL
@@ -1227,7 +1262,7 @@ chance-walk
 chance-walk
 0
 100
-26.0
+27.0
 1
 1
 NIL
@@ -1242,7 +1277,7 @@ chance-learn-by-neighbour
 chance-learn-by-neighbour
 0
 10
-0.1
+0.0
 0.1
 1
 NIL
@@ -1257,7 +1292,7 @@ chance-learn-by-environment
 chance-learn-by-environment
 0
 10
-4.5
+1.0
 0.1
 1
 NIL
@@ -1308,7 +1343,7 @@ visual-horizon
 visual-horizon
 1
 20
-20.0
+5.0
 1
 1
 NIL
@@ -1323,7 +1358,7 @@ chance-mutation
 chance-mutation
 0
 2
-0.1
+0.0
 0.02
 1
 NIL
@@ -1374,7 +1409,7 @@ number-of-propositions
 number-of-propositions
 1
 10
-3.0
+1.0
 1
 1
 NIL
@@ -1388,7 +1423,7 @@ CHOOSER
 current-proposition
 current-proposition
 "A" "B" "C" "D" "E" "F" "G" "H" "I" "J"
-0
+4
 
 SLIDER
 13
@@ -1399,7 +1434,7 @@ chance-question
 chance-question
 0
 100
-7.0
+0.0
 1
 1
 NIL
@@ -1467,7 +1502,7 @@ inconspenalty
 inconspenalty
 0
 1
-0.08
+0.07
 0.01
 1
 NIL
@@ -1482,7 +1517,7 @@ attraction
 attraction
 0.0
 1
-0.0
+0.47
 0.01
 1
 NIL
@@ -1527,7 +1562,7 @@ force-of-norms
 force-of-norms
 0
 1
-0.12
+1.0
 0.01
 1
 NIL
@@ -1542,7 +1577,7 @@ firmness-of-principle
 firmness-of-principle
 0
 10
-1.6
+2.6
 0.1
 1
 NIL
@@ -1587,7 +1622,7 @@ stepsize
 stepsize
 0
 10
-0.7
+0.8
 0.1
 1
 NIL
@@ -1682,7 +1717,7 @@ media-opinion-mean
 media-opinion-mean
 0
 1
-0.49
+0.46
 0.01
 1
 NIL
@@ -1697,7 +1732,7 @@ media-opinion-std
 media-opinion-std
 0
 1
-0.6
+0.38
 0.01
 1
 NIL
@@ -1712,7 +1747,7 @@ perceived-bias-mean
 perceived-bias-mean
 -1
 1
-0.2
+1.0
 0.1
 1
 NIL
@@ -1749,10 +1784,10 @@ NIL
 HORIZONTAL
 
 PLOT
-1080
-334
-1374
-577
+1416
+164
+1632
+284
 Reputation of agents
 NIL
 NIL
@@ -1767,10 +1802,10 @@ PENS
 "default" 1.0 0 -16777216 true "" "ask medias [ set-plot-pen-color color plotxy ticks reputation ]"
 
 PLOT
-1080
-604
-1280
-754
+1337
+10
+1537
+160
 Distribution of Evidence for Media
 NIL
 NIL
@@ -1783,6 +1818,24 @@ false
 "" ""
 PENS
 "default" 1.0 1 -16777216 true "" ""
+
+PLOT
+1075
+304
+1693
+756
+Peoples opinions
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" ""
 
 @#$#@#$#@
 ## WHAT IS IT?
