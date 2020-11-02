@@ -30,6 +30,9 @@ Documentation is now in a seperate subrepository hosted on overleaf. Fetch all s
     git add .submodules
     git commit
 
+## Setup
+In the folder DMAS-Media-agents-and-social-outcomes/code/ you can find two netlogo files: Dial1.0.nlogo (the orginal Dysktra implementation) and Final.nlogo (Our contribution)
+For running the Final.nlogo file you have to install netlogo 6.1.1
 
 **NOTE** Right now docs are only available to members of the oerleaf repository, after finishing of the project this will be made available.
 
