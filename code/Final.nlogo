@@ -1,4 +1,5 @@
 extensions [array vid]
+; NEW - sepprating the turtule in two different breeds
 breed [medias media]
 breed [peoples people]
 peoples-own [
@@ -12,6 +13,7 @@ peoples-own [
    profit-strategy  ; list of learned profits of all strategy
    prior-size       ; prior size for profit
  ]
+; NEW - adding properties that an media agent has
 medias-own [
    props            ; a list of pairs: < evidence importance >
    init-props       ; a list of pairs: < evidence importance > the initial values
@@ -69,18 +71,12 @@ end
 
 ; Dialogue Oriented
 
-; Initialization and the Main Loop
-;;to-report random-prop ; to create a proposition with random evidence and importance values
-                      ; used in setup
-;;report list  (random-float 1) (random-float 1)
-;;end
-
 ; A function that gives us a random number within a certain interval
 to-report random-between [ min-num max-num ]
     report random-float (max-num - min-num) + min-num
 end
 
-
+; NEW - modified the initalization procedure for media agents
 to setup
   ;; (for this model to work with NetLogo's new plotting features,
   ;; __clear-all-and-reset-ticks should be replaced with clear-all at
@@ -120,6 +116,7 @@ to setup
               set size (random-float 2) + 1
               set profit-strategy [0 0 0]
             ]
+  ; initialize the media agents
   create-medias number-of-medias [
               setxy (int (who - number-of-people) * 5 - 20) 16
               set props generateopinionsmedia ;; adjust this function for experiment
@@ -137,7 +134,6 @@ to setup
   setup-plot
   setup-plot-media
   setup-plot-peoples
-  ;update-plotfile ;; !!!!!!!
 end
 
 
@@ -151,6 +147,7 @@ to-report find-action [c l]
   report first l
 end
 
+; NEW - added media agent to simulation
 to go
    ask medias [act-media]
    set total-odds 0
@@ -181,6 +178,7 @@ to-report similar-attitude [a b]
   report sum (map [ [?1 ?2] -> agreementfactor first ?1 first ?2 ] a b )
 end
 
+; NEW - modified added media agent to simulation so it can interact with other agents
 to act
     set prior-size size
     run second (find-action (random-float total-odds) action-prob-pairs)
@@ -205,7 +203,7 @@ end
 
 ; new added
 
-
+; NEW - added behaviors media agent so it can interact with other agents
 to act-media
   set prior-size size
   let random_prop_index random number-of-props
@@ -231,6 +229,7 @@ to act-media
   ;set reputation 5 + random-float 5 - random-float 5
 end
 
+; NEW - let the media agent manipulate the behavior of the people agent
 to adjust-people-opinion [cnt pa ev rprop]
   let peopleindex item cnt pa
   ask people peopleindex [
@@ -253,14 +252,6 @@ to adjust-people-opinion [cnt pa ev rprop]
   ]
 end
 
-to init-perceived-media-bias
-
-end
-
-to adjust-influence-by-perceived-media-bias
-
-end
-
 to adjust-patch-opinion [cnt pa ev] ; cnt = counter, pa = indices of patches addressed, ev = evidence
   let patchindex item cnt pa
   let patchxcor patchindex mod 33
@@ -271,8 +262,6 @@ to adjust-patch-opinion [cnt pa ev] ; cnt = counter, pa = indices of patches add
      let po item 0 item i pprops; po = patch evidence/opinion
      let old-sublist item 0 pprops
      set pprops replace-item 0 pprops (replace-item i old-sublist (po + (ev - po)* 0.01) )
-     ;i pprops (po + (ev - po)* 0.1)
-     ; report replace-item index1 lists (replace-item index2 old-sublist value)
      set i i + 1
      if i = 2 [stop]
     ]
@@ -283,8 +272,6 @@ to-report reputation-based-prob [r] ; r = reputation of media agents
   let half-range 1 - r
   report r + random-float half-range - random-float half-range
 end
-
-
 
 to announce ;turtle procedure
  if size > announce-threshold [
@@ -390,6 +377,7 @@ to question
        [ask candidate [set questions fput (list myself max-imp-question) questions]]
 end
 
+; NEW - modified, only the people agent has the ability to answer questions
 to answer-questions
   if breed = peoples [
   if not empty? questions [
@@ -432,6 +420,8 @@ to attack
   ]
 end
 
+
+; NEW - modified, only the people agent has the ability to argue and attack
 to reply-attacks
   if breed = peoples [
 if size > 1 [
@@ -600,8 +590,7 @@ to setopinion [p evi] ; prop evidence importance
     [if size > inconspenalty + delta [
       set totalsim totalsim -  inconspenalty
       set size size -  inconspenalty ]
-     ]  ; else punishment for inconsistency
-;set props replace-item p props evi
+     ]
 end
 
 
@@ -634,15 +623,11 @@ end
 ; generate opinions for the media agents
 to-report generateopinionsmedia
   let evids []
-  ;let imps []
   repeat number-of-props [ set evids fput (cap (random-normal media-opinion-mean media-opinion-std) 0 1) evids]
-  ;repeat number-of-props [ set imps fput (random-float 1) imps]
-  ;report zip evids imps
   report evids
 end
 
 to-report cap [n l u] ; number, lower bound, upper bound
-  ;randdom-float(max-min)+min
   if n > u [report u]
   if n < l [report l]
   report n
@@ -1262,7 +1247,7 @@ chance-walk
 chance-walk
 0
 100
-27.0
+100.0
 1
 1
 NIL
@@ -1277,7 +1262,7 @@ chance-learn-by-neighbour
 chance-learn-by-neighbour
 0
 10
-0.0
+1.5
 0.1
 1
 NIL
@@ -1846,10 +1831,13 @@ The borders of the agents also represent the evidence in favour or against the p
 ## HOW IT WORKS
 
 The model starts with a random distribution  agents with random evidence and importance values. The evidence ranges from -1 to 1. 1 means pro a proposition (white); -1 is contra (black) and 0 (blue) is no clue. Importance ranges from 0 to 1
- Turtles move in the direction of a patch that is most similar to their opinion or paint the world. Similarity is defined by the carthesian distance:
+ Peoples move in the direction of a patch that is most similar to their opinion or paint the world. Similarity is defined by the carthesian distance:
  sqrt( (e1 - e2)^2 + (i1 - i2)^2).
-Agents make announcements and the patches in the neighbourhood of the announcers (environment), remember that information for some time.
+People make announcements and the patches in the neighbourhood of the announcers (environment), remember that information for some time.
 
+Media agent can also make announcements, the main difference with the peope agent is that they are not attackble and therefore not able to argue. The position of an media agent is fixed (brown grid). Also, the initial reputation of a media agent is much larger than an people agent. 
+
+They have also a higher reach than the normal agent. The the media agent can be initialized with the number-of-media slider. 
 ## HOW TO USE IT
 
 The NUMBER slider sets the number of turtles.
@@ -1886,6 +1874,46 @@ FORGETSPEED
      - decreases the time a patch remembers it's contents.
 
 NEUTRAL-IMPORTANCE - The default background importance of the patches that forgotten all information. If this value is 0, the agent with opposite opinions may prefer each other over a neutral patch because of the distance in importance.
+
+MEDIA-AGENT PROPERTIES
+
+MEDIA-OPINION-MEAN - the mean of the distribution of media opinion/evidence from which we sample individual media opinions. (It's not the mean of the media opinion once we have sampled them. The sample mean may deviate from the population mean)
+
+MEDIA-OPINION-STD - The spread of media opinion/evidence from which we sample
+
+MEDIA-IMPACT - A user-defined parameter that modifies the influence of media agents on people agents. Its values vary from "no influence at all" to "very strong influence".
+
+PERCEIVED-BIAS-STD - The standard deviation of the perceived media bias distribution from which we sample values for PMD for individual agents
+
+
+
+## SIMULATION ICONS
+An people agent can have different icons in the simmulation, each of this icons have a meaning. The agent can choose from three different movement strategies;
+ 
+SMILEY - The agent moves away from the most corresponding area.
+ARROW - the agent moves perpendicular towards the most corresponding area
+CIRCLE - The agent moves toward the area that corresonds best with the agent's opinion
+For example: What are the different agents? Why are there smileys and pentagons?
+
+Colors for the normal agents:
+White: means pro a proposition. (1)
+Black: against a proposition (-1)
+Blue: the agent has no clue (0)
+
+## WHAT IS NEW?
+Our contribution to this simulation is the impelentation of a new agent type (media). The media agent has some attributes that can be manipulated throught the interface. The new added element can be find on the right hand side of the interface, it consists of the following elements: 
+
+SLIDERS:
+	- media-opinion-mean
+	- media-opinion-std
+	- number-of-medias
+	- perceived-bias-mean
+	- perceived-bias-std
+	- mean-impact
+POLOTS: 
+	- Distribution of Evidence for Media
+	- Reputation of Agents
+	- Peoples opinion
 
 ## THINGS TO NOTICE
 
