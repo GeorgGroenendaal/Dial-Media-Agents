@@ -2,8 +2,8 @@
 
 ## Instructions on how to run the code
 Download the latest version of Netlogo from https://ccl.northwestern.edu/netlogo/6.1.1/
-Our implementation is on the master branch in code/ and is called Finale.nlogo
-Once you open NetLogo, you can open the file Finale.nlogo to run our program. 
+Our implementation is on the master branch in code/ and is called Final.nlogo
+Once you open NetLogo, you can open the file Final.nlogo to run our program. 
 In order to initialise the simulation, press the "setup" button. To start the simulation, press "go".
 
 ## Original implementation
