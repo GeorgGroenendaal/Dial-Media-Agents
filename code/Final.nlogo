@@ -1832,10 +1832,10 @@ PENS
 "default" 1.0 1 -16777216 true "" ""
 
 PLOT
-1342
-313
-1960
-765
+1337
+302
+1955
+754
 Peoples opinions
 NIL
 NIL
@@ -1872,7 +1872,7 @@ TEXTBOX
 333
 1393
 359
-Against prosition\n
+Evidence = 1\n
 11
 0.0
 1
@@ -1882,7 +1882,7 @@ TEXTBOX
 410
 1395
 436
-Pro proposition\n
+Evidence = 0\n
 11
 0.0
 1
@@ -1892,7 +1892,7 @@ TEXTBOX
 370
 1394
 396
-Indifferent
+Evidence = 0.5
 11
 0.0
 1
