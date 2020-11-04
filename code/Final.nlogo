@@ -941,8 +941,35 @@ to-report report-authority
    report gini  [size] of peoples
 end
 
+; New - Legend
+to setup-legend-plot
+  ; Choose correct plot
+  set-current-plot "Legend"
+  clear-plot
 
+  ; Define starting y and color
+  let starts [ [ 10 black ] [ 7 yellow ] [ 4 white ] ]
 
+  ; for each value in starts
+  foreach starts [ start ->
+    ; make a range of values starting at the initial
+    ; y value from 'starts'
+    let s first start
+    let f s - 2.5
+    let ran ( range s f -0.01 )
+    create-temporary-plot-pen "temp"
+    set-plot-pen-color last start
+
+    ; draw lines at each y value to make it
+    ; look like a solid drawing
+    foreach ran [ y ->
+      plot-pen-up
+      plotxy 1 y
+      plot-pen-down
+      plotxy 2 y
+    ]
+  ]
+end
 
 
 to-report report-pressure
@@ -1054,10 +1081,10 @@ vid:save-recording _recording-save-file-name
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-460
-10
-1060
-490
+461
+15
+1061
+495
 -1
 -1
 12.1
@@ -1769,10 +1796,10 @@ NIL
 HORIZONTAL
 
 PLOT
-1416
-164
-1632
-284
+1336
+170
+1552
+290
 Reputation of agents
 NIL
 NIL
@@ -1805,10 +1832,10 @@ PENS
 "default" 1.0 1 -16777216 true "" ""
 
 PLOT
-1075
-304
-1693
-756
+1342
+313
+1960
+765
 Peoples opinions
 NIL
 NIL
@@ -1821,6 +1848,54 @@ false
 "" ""
 PENS
 "default" 1.0 0 -16777216 true "" ""
+
+PLOT
+1079
+302
+1279
+452
+Legend
+NIL
+NIL
+0.9
+4.0
+1.0
+10.5
+true
+false
+"" ""
+PENS
+"pen-0" 1.0 0 -7500403 true "" "setup-legend-plot"
+
+TEXTBOX
+1178
+333
+1393
+359
+Against prosition\n
+11
+0.0
+1
+
+TEXTBOX
+1180
+410
+1395
+436
+Pro proposition\n
+11
+0.0
+1
+
+TEXTBOX
+1179
+370
+1394
+396
+Indifferent
+11
+0.0
+1
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -1895,10 +1970,15 @@ ARROW - the agent moves perpendicular towards the most corresponding area
 CIRCLE - The agent moves toward the area that corresonds best with the agent's opinion
 For example: What are the different agents? Why are there smileys and pentagons?
 
-Colors for the normal agents:
+Colors for the patches:
 White: means pro a proposition. (1)
 Black: against a proposition (-1)
 Blue: the agent has no clue (0)
+
+Colors for the agents:
+White: In favour of aproposition
+Black: Against a proposition
+Yellow: Indifferent
 
 ## WHAT IS NEW?
 Our contribution to this simulation is the impelentation of a new agent type (media). The media agent has some attributes that can be manipulated throught the interface. The new added element can be find on the right hand side of the interface, it consists of the following elements: 
