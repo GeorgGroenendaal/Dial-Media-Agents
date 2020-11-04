@@ -1,9 +1,9 @@
 # Media agents in DIAL
 
 ## Instructions on how to run the code
-Download the latest version of Netlogo from https://ccl.northwestern.edu/netlogo/references.shtml.
-Our implementation is on the master branch in code/code/ and is called Dial1.0.nlogo.
-Once you open NetLogo, you can open the file Dial1.0.nlogo to run our program. 
+Download the latest version of Netlogo from https://ccl.northwestern.edu/netlogo/6.1.1/
+Our implementation is on the master branch in code/ and is called Finale.nlogo
+Once you open NetLogo, you can open the file Finale.nlogo to run our program. 
 In order to initialise the simulation, press the "setup" button. To start the simulation, press "go".
 
 ## Original implementation
@@ -23,7 +23,7 @@ Documentation is now in a seperate subrepository hosted on overleaf. Fetch all s
     cd DMAS-Media-agents-and-social-outcomes
     
     ## Setup
-    1. Download and install Netlogo version 6.1.1 https://ccl.northwestern.edu/netlogo/references.shtml
+    1. Download and install Netlogo version 6.1.1 https://ccl.northwestern.edu/netlogo/6.1.1/
     2. cd to DMAS-Media-agents-and-social-outcomes/code/
     3. Run Final.nlogo to start the simulation
     
