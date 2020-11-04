@@ -62,7 +62,7 @@ Maybe this is useful for you too Corinna.
 - NEUTRAL-IMPORTANCE - The default background importance of the patches that forgotten all information. 
     If this value is 0, the agent with opposite opinions may prefer each other over a neutral patch because of the distance in importance.
 
-# MEDIA-AGENT PROPERTIES
+MEDIA-AGENT PROPERTIES
 - MEDIA-OPINION-MEAN - the mean of the distribution of media opinion/evidence from which we sample individual media opinions. 
 (It’s not the mean of the media opinion once we have sampled them. The sample mean may deviate from the population mean)
 - MEDIA-OPINION-STD - The spread of media opinion/evidence from which we sample
