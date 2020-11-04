@@ -152,6 +152,7 @@ to-report find-action [c l]
 end
 
 to go
+   if ticks < 290 [
    ask medias [act-media]
    set total-odds 0
    set action-prob-pairs (map [ [?1 ?2] -> list (incr-total-odds ?1) ?2 ]
@@ -174,7 +175,7 @@ to go
    ask peoples [set size max (list 0 (size * f))]
 ;   update-plot ;; !!!!!!
    show-world
-   tick
+    tick]
 end
 
 to-report similar-attitude [a b]
@@ -606,6 +607,9 @@ end
 
 
 to-report generateid
+  ;this assigns the ids 1,3,5,11,13,15,21,23,25,etc to the people
+  ;those numbers are used only for plotting, and are chosen to
+  ;correspond to color codes that have good visibility
   let currentid idstart
   ifelse (idstart mod 5) = 0 [
     set idstart (idstart + 6)]
@@ -877,7 +881,9 @@ end
 
 to setup-plot-media
   set-current-plot "Distribution of Evidence for Media"
-  set-plot-y-range 0 number-of-medias
+  let media-amount 1
+  if number-of-medias > 1 [set media-amount number-of-medias]
+  set-plot-y-range 0 media-amount
   set-plot-x-range 0 1.01
   set-histogram-num-bars 20
 end
@@ -1471,10 +1477,10 @@ NIL
 HORIZONTAL
 
 PLOT
-13
-528
-796
-881
+1102
+465
+1885
+818
 High force-of-Arguments and High force-of-Norms
 cycles
 parameters
@@ -1710,14 +1716,14 @@ HORIZONTAL
 
 SLIDER
 1070
-20
-1326
-53
+16
+1243
+49
 media-opinion-mean
 media-opinion-mean
 0
 1
-0.46
+0.5
 0.01
 1
 NIL
@@ -1732,7 +1738,7 @@ media-opinion-std
 media-opinion-std
 0
 1
-0.38
+0.28
 0.01
 1
 NIL
@@ -1747,7 +1753,7 @@ perceived-bias-mean
 perceived-bias-mean
 -1
 1
-1.0
+0.3
 0.1
 1
 NIL
@@ -1784,28 +1790,10 @@ NIL
 HORIZONTAL
 
 PLOT
-1416
-164
-1632
-284
-Reputation of agents
-NIL
-NIL
-0.4
-0.6
-0.3
-0.5
-true
-false
-"" ""
-PENS
-"default" 1.0 0 -16777216 true "" "ask medias [ set-plot-pen-color color plotxy ticks reputation ]"
-
-PLOT
-1337
-10
-1537
-160
+554
+510
+754
+660
 Distribution of Evidence for Media
 NIL
 NIL
@@ -1820,10 +1808,10 @@ PENS
 "default" 1.0 1 -16777216 true "" ""
 
 PLOT
-1075
-304
-1693
-756
+1262
+10
+1880
+462
 Peoples opinions
 NIL
 NIL
