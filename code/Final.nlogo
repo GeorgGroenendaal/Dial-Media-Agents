@@ -1,7 +1,9 @@
 extensions [array vid]
+; NEW - sepprating the turtule in two different breeds
 breed [medias media]
 breed [peoples people]
 peoples-own [
+   id               ; personal idendity
    bias             ; perceived media bias
    props            ; a list of pairs: < evidence importance >
    init-props       ; a list of pairs: < evidence importance > the initial values
@@ -11,6 +13,7 @@ peoples-own [
    profit-strategy  ; list of learned profits of all strategy
    prior-size       ; prior size for profit
  ]
+; NEW - adding properties that an media agent has
 medias-own [
    props            ; a list of pairs: < evidence importance >
    init-props       ; a list of pairs: < evidence importance > the initial values
@@ -20,7 +23,7 @@ medias-own [
  ]
 patches-own [ pprops]
 
-globals [delta action-prob-pairs current-prop number-of-props total-odds totalsim totalsize filenaam agentsorderedatstart triangles strategy-shapes plottitle _recording-save-file-name]
+globals [delta action-prob-pairs current-prop number-of-props total-odds totalsim totalsize filenaam agentsorderedatstart triangles strategy-shapes plottitle _recording-save-file-name idstart]
 
 ; Utility functions
 to-report second [l] ; RENAME #################################
@@ -68,18 +71,12 @@ end
 
 ; Dialogue Oriented
 
-; Initialization and the Main Loop
-;;to-report random-prop ; to create a proposition with random evidence and importance values
-                      ; used in setup
-;;report list  (random-float 1) (random-float 1)
-;;end
-
 ; A function that gives us a random number within a certain interval
 to-report random-between [ min-num max-num ]
     report random-float (max-num - min-num) + min-num
 end
 
-
+; NEW - modified the initalization procedure for media agents
 to setup
   ;; (for this model to work with NetLogo's new plotting features,
   ;; __clear-all-and-reset-ticks should be replaced with clear-all at
@@ -101,7 +98,12 @@ to setup
   ask patches [if pycor >= 13 [set pcolor brown]]
   ask patches [if pycor < 13 [set pcolor blue]]
   ;; initialise people in a restricted y-coordinate range:
+
+  ;;id for people
+  set idstart 1
+
   create-peoples number-of-people [setxy random-xcor random-between (min-pycor + 0.5) (max-pycor - 8)
+              set id generateid
               set bias generatebias
               set props generateopinions
               set init-props props
@@ -114,6 +116,7 @@ to setup
               set size (random-float 2) + 1
               set profit-strategy [0 0 0]
             ]
+  ; initialize the media agents
   create-medias number-of-medias [
               setxy (int (who - number-of-people) * 5 - 20) 16
               set props generateopinionsmedia ;; adjust this function for experiment
@@ -130,7 +133,7 @@ to setup
   set totalsize  sum [size] of peoples
   setup-plot
   setup-plot-media
-  ;update-plotfile ;; !!!!!!!
+  setup-plot-peoples
 end
 
 
@@ -144,6 +147,7 @@ to-report find-action [c l]
   report first l
 end
 
+; NEW - added media agent to simulation
 to go
    ask medias [act-media]
    set total-odds 0
@@ -174,6 +178,7 @@ to-report similar-attitude [a b]
   report sum (map [ [?1 ?2] -> agreementfactor first ?1 first ?2 ] a b )
 end
 
+; NEW - modified added media agent to simulation so it can interact with other agents
 to act
     set prior-size size
     run second (find-action (random-float total-odds) action-prob-pairs)
@@ -198,7 +203,7 @@ end
 
 ; new added
 
-
+; NEW - added behaviors media agent so it can interact with other agents
 to act-media
   set prior-size size
   let random_prop_index random number-of-props
@@ -224,6 +229,7 @@ to act-media
   ;set reputation 5 + random-float 5 - random-float 5
 end
 
+; NEW - let the media agent manipulate the behavior of the people agent
 to adjust-people-opinion [cnt pa ev rprop]
   let peopleindex item cnt pa
   ask people peopleindex [
@@ -246,14 +252,6 @@ to adjust-people-opinion [cnt pa ev rprop]
   ]
 end
 
-to init-perceived-media-bias
-
-end
-
-to adjust-influence-by-perceived-media-bias
-
-end
-
 to adjust-patch-opinion [cnt pa ev] ; cnt = counter, pa = indices of patches addressed, ev = evidence
   let patchindex item cnt pa
   let patchxcor patchindex mod 33
@@ -264,8 +262,6 @@ to adjust-patch-opinion [cnt pa ev] ; cnt = counter, pa = indices of patches add
      let po item 0 item i pprops; po = patch evidence/opinion
      let old-sublist item 0 pprops
      set pprops replace-item 0 pprops (replace-item i old-sublist (po + (ev - po)* 0.01) )
-     ;i pprops (po + (ev - po)* 0.1)
-     ; report replace-item index1 lists (replace-item index2 old-sublist value)
      set i i + 1
      if i = 2 [stop]
     ]
@@ -276,8 +272,6 @@ to-report reputation-based-prob [r] ; r = reputation of media agents
   let half-range 1 - r
   report r + random-float half-range - random-float half-range
 end
-
-
 
 to announce ;turtle procedure
  if size > announce-threshold [
@@ -383,6 +377,7 @@ to question
        [ask candidate [set questions fput (list myself max-imp-question) questions]]
 end
 
+; NEW - modified, only the people agent has the ability to answer questions
 to answer-questions
   if breed = peoples [
   if not empty? questions [
@@ -425,6 +420,8 @@ to attack
   ]
 end
 
+
+; NEW - modified, only the people agent has the ability to argue and attack
 to reply-attacks
   if breed = peoples [
 if size > 1 [
@@ -593,9 +590,18 @@ to setopinion [p evi] ; prop evidence importance
     [if size > inconspenalty + delta [
       set totalsim totalsim -  inconspenalty
       set size size -  inconspenalty ]
-     ]  ; else punishment for inconsistency
-;set props replace-item p props evi
+     ]
 end
+
+
+to-report generateid
+  let currentid idstart
+  ifelse (idstart mod 5) = 0 [
+    set idstart (idstart + 6)]
+  [ set idstart (idstart + 2)]
+  report currentid
+end
+
 
 to-report generatebias
   let half-range 0
@@ -617,15 +623,11 @@ end
 ; generate opinions for the media agents
 to-report generateopinionsmedia
   let evids []
-  ;let imps []
   repeat number-of-props [ set evids fput (cap (random-normal media-opinion-mean media-opinion-std) 0 1) evids]
-  ;repeat number-of-props [ set imps fput (random-float 1) imps]
-  ;report zip evids imps
   report evids
 end
 
 to-report cap [n l u] ; number, lower bound, upper bound
-  ;randdom-float(max-min)+min
   if n > u [report u]
   if n < l [report l]
   report n
@@ -755,6 +757,7 @@ to show-world
   ifelse viewmode [show-evid][show-imp]
   update-plot
   update-plot-medias
+  update-plot-peoples
 end
 
 to show-imp        ;; show a map of the importance values black red white for turtles
@@ -823,9 +826,9 @@ to update-plot
   let tmp 0
   set-current-plot "Distribution of Evidence"
     histogram [first item current-prop props] of peoples
-    set-current-plot "Importance Distribution"
+  set-current-plot "Importance Distribution"
     histogram [second item current-prop props] of peoples
- set-current-plot plottitle
+  set-current-plot plottitle
     set-current-plot-pen "Reputation Distribution";; black
     set tmp report-authority plot tmp
     set-current-plot-pen "Spatial Distribution" ;;"friend ratio" ;; green
@@ -838,6 +841,23 @@ to update-plot
     set tmp  report-iopop plot tmp
     set-current-plot-pen "Importance Distribution" ;; yellow
     set tmp  report-giniimp plot tmp
+end
+
+to setup-plot-peoples
+  set-current-plot "Peoples opinions"
+  set-plot-y-range 0 1
+  set-plot-x-range 0 1
+end
+
+to update-plot-peoples
+  let tmp 0
+  set-current-plot "Peoples opinions"
+  let index 0
+  ask peoples [
+    create-temporary-plot-pen (word who)
+    set-plot-pen-color id
+    plotxy ticks first first props
+  ]
 end
 
 to setup-plot-media
@@ -921,8 +941,35 @@ to-report report-authority
    report gini  [size] of peoples
 end
 
+; New - Legend
+to setup-legend-plot
+  ; Choose correct plot
+  set-current-plot "Legend"
+  clear-plot
 
+  ; Define starting y and color
+  let starts [ [ 10 black ] [ 7 yellow ] [ 4 white ] ]
 
+  ; for each value in starts
+  foreach starts [ start ->
+    ; make a range of values starting at the initial
+    ; y value from 'starts'
+    let s first start
+    let f s - 2.5
+    let ran ( range s f -0.01 )
+    create-temporary-plot-pen "temp"
+    set-plot-pen-color last start
+
+    ; draw lines at each y value to make it
+    ; look like a solid drawing
+    foreach ran [ y ->
+      plot-pen-up
+      plotxy 1 y
+      plot-pen-down
+      plotxy 2 y
+    ]
+  ]
+end
 
 
 to-report report-pressure
@@ -1034,10 +1081,10 @@ vid:save-recording _recording-save-file-name
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-460
-10
-1060
-490
+461
+15
+1061
+495
 -1
 -1
 12.1
@@ -1103,7 +1150,7 @@ number-of-people
 number-of-people
 1
 100
-28.0
+27.0
 1
 1
 NIL
@@ -1152,7 +1199,7 @@ forgetspeed
 forgetspeed
 0
 0.005
-0.00157
+0.00106
 0.00001
 1
 NIL
@@ -1167,7 +1214,7 @@ chance-announce
 chance-announce
 0
 100
-21.0
+38.0
 1
 1
 NIL
@@ -1197,7 +1244,7 @@ stepsize
 stepsize
 0
 2
-0.7
+0.8
 0.02
 1
 NIL
@@ -1227,7 +1274,7 @@ chance-walk
 chance-walk
 0
 100
-26.0
+100.0
 1
 1
 NIL
@@ -1242,7 +1289,7 @@ chance-learn-by-neighbour
 chance-learn-by-neighbour
 0
 10
-0.1
+1.5
 0.1
 1
 NIL
@@ -1257,7 +1304,7 @@ chance-learn-by-environment
 chance-learn-by-environment
 0
 10
-4.5
+1.0
 0.1
 1
 NIL
@@ -1308,7 +1355,7 @@ visual-horizon
 visual-horizon
 1
 20
-20.0
+5.0
 1
 1
 NIL
@@ -1323,7 +1370,7 @@ chance-mutation
 chance-mutation
 0
 2
-0.1
+0.0
 0.02
 1
 NIL
@@ -1374,7 +1421,7 @@ number-of-propositions
 number-of-propositions
 1
 10
-3.0
+1.0
 1
 1
 NIL
@@ -1388,7 +1435,7 @@ CHOOSER
 current-proposition
 current-proposition
 "A" "B" "C" "D" "E" "F" "G" "H" "I" "J"
-0
+4
 
 SLIDER
 13
@@ -1399,7 +1446,7 @@ chance-question
 chance-question
 0
 100
-7.0
+0.0
 1
 1
 NIL
@@ -1467,7 +1514,7 @@ inconspenalty
 inconspenalty
 0
 1
-0.08
+0.07
 0.01
 1
 NIL
@@ -1482,7 +1529,7 @@ attraction
 attraction
 0.0
 1
-0.0
+0.47
 0.01
 1
 NIL
@@ -1527,7 +1574,7 @@ force-of-norms
 force-of-norms
 0
 1
-0.12
+1.0
 0.01
 1
 NIL
@@ -1542,7 +1589,7 @@ firmness-of-principle
 firmness-of-principle
 0
 10
-1.6
+2.6
 0.1
 1
 NIL
@@ -1587,7 +1634,7 @@ stepsize
 stepsize
 0
 10
-0.7
+0.8
 0.1
 1
 NIL
@@ -1682,7 +1729,7 @@ media-opinion-mean
 media-opinion-mean
 0
 1
-0.49
+0.46
 0.01
 1
 NIL
@@ -1697,7 +1744,7 @@ media-opinion-std
 media-opinion-std
 0
 1
-0.6
+0.38
 0.01
 1
 NIL
@@ -1712,7 +1759,7 @@ perceived-bias-mean
 perceived-bias-mean
 -1
 1
-0.2
+1.0
 0.1
 1
 NIL
@@ -1749,10 +1796,10 @@ NIL
 HORIZONTAL
 
 PLOT
-1080
-334
-1374
-577
+1336
+170
+1552
+290
 Reputation of agents
 NIL
 NIL
@@ -1767,10 +1814,10 @@ PENS
 "default" 1.0 0 -16777216 true "" "ask medias [ set-plot-pen-color color plotxy ticks reputation ]"
 
 PLOT
-1080
-604
-1280
-754
+1337
+10
+1537
+160
 Distribution of Evidence for Media
 NIL
 NIL
@@ -1784,6 +1831,72 @@ false
 PENS
 "default" 1.0 1 -16777216 true "" ""
 
+PLOT
+1337
+302
+1955
+754
+Peoples opinions
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" ""
+
+PLOT
+1079
+302
+1279
+452
+Legend
+NIL
+NIL
+0.9
+4.0
+1.0
+10.5
+true
+false
+"" ""
+PENS
+"pen-0" 1.0 0 -7500403 true "" "setup-legend-plot"
+
+TEXTBOX
+1178
+333
+1393
+359
+Evidence = 1\n
+11
+0.0
+1
+
+TEXTBOX
+1180
+410
+1395
+436
+Evidence = 0\n
+11
+0.0
+1
+
+TEXTBOX
+1179
+370
+1394
+396
+Evidence = 0.5
+11
+0.0
+1
+
 @#$#@#$#@
 ## WHAT IS IT?
 
@@ -1793,10 +1906,13 @@ The borders of the agents also represent the evidence in favour or against the p
 ## HOW IT WORKS
 
 The model starts with a random distribution  agents with random evidence and importance values. The evidence ranges from -1 to 1. 1 means pro a proposition (white); -1 is contra (black) and 0 (blue) is no clue. Importance ranges from 0 to 1
- Turtles move in the direction of a patch that is most similar to their opinion or paint the world. Similarity is defined by the carthesian distance:
+ Peoples move in the direction of a patch that is most similar to their opinion or paint the world. Similarity is defined by the carthesian distance:
  sqrt( (e1 - e2)^2 + (i1 - i2)^2).
-Agents make announcements and the patches in the neighbourhood of the announcers (environment), remember that information for some time.
+People make announcements and the patches in the neighbourhood of the announcers (environment), remember that information for some time.
 
+Media agent can also make announcements, the main difference with the peope agent is that they are not attackble and therefore not able to argue. The position of an media agent is fixed (brown grid). Also, the initial reputation of a media agent is much larger than an people agent. 
+
+They have also a higher reach than the normal agent. The the media agent can be initialized with the number-of-media slider. 
 ## HOW TO USE IT
 
 The NUMBER slider sets the number of turtles.
@@ -1833,6 +1949,51 @@ FORGETSPEED
      - decreases the time a patch remembers it's contents.
 
 NEUTRAL-IMPORTANCE - The default background importance of the patches that forgotten all information. If this value is 0, the agent with opposite opinions may prefer each other over a neutral patch because of the distance in importance.
+
+MEDIA-AGENT PROPERTIES
+
+MEDIA-OPINION-MEAN - the mean of the distribution of media opinion/evidence from which we sample individual media opinions. (It's not the mean of the media opinion once we have sampled them. The sample mean may deviate from the population mean)
+
+MEDIA-OPINION-STD - The spread of media opinion/evidence from which we sample
+
+MEDIA-IMPACT - A user-defined parameter that modifies the influence of media agents on people agents. Its values vary from "no influence at all" to "very strong influence".
+
+PERCEIVED-BIAS-STD - The standard deviation of the perceived media bias distribution from which we sample values for PMD for individual agents
+
+
+
+## SIMULATION ICONS
+An people agent can have different icons in the simmulation, each of this icons have a meaning. The agent can choose from three different movement strategies;
+ 
+SMILEY - The agent moves away from the most corresponding area.
+ARROW - the agent moves perpendicular towards the most corresponding area
+CIRCLE - The agent moves toward the area that corresonds best with the agent's opinion
+For example: What are the different agents? Why are there smileys and pentagons?
+
+Colors for the patches:
+White: means pro a proposition. (1)
+Black: against a proposition (-1)
+Blue: the agent has no clue (0)
+
+Colors for the agents:
+White: In favour of aproposition
+Black: Against a proposition
+Yellow: Indifferent
+
+## WHAT IS NEW?
+Our contribution to this simulation is the impelentation of a new agent type (media). The media agent has some attributes that can be manipulated throught the interface. The new added element can be find on the right hand side of the interface, it consists of the following elements: 
+
+SLIDERS:
+	- media-opinion-mean
+	- media-opinion-std
+	- number-of-medias
+	- perceived-bias-mean
+	- perceived-bias-std
+	- mean-impact
+POLOTS: 
+	- Distribution of Evidence for Media
+	- Reputation of Agents
+	- Peoples opinion
 
 ## THINGS TO NOTICE
 
