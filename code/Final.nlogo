@@ -171,7 +171,7 @@ to go
    ask peoples [set size max (list 0 (size * f))]
 ;   update-plot ;; !!!!!!
    show-world
-   tick
+    tick
 end
 
 to-report similar-attitude [a b]
@@ -595,6 +595,9 @@ end
 
 
 to-report generateid
+  ;this assigns the ids 1,3,5,11,13,15,21,23,25,etc to the people
+  ;those numbers are used only for plotting, and are chosen to
+  ;correspond to color codes that have good visibility
   let currentid idstart
   ifelse (idstart mod 5) = 0 [
     set idstart (idstart + 6)]
@@ -862,7 +865,9 @@ end
 
 to setup-plot-media
   set-current-plot "Distribution of Evidence for Media"
-  set-plot-y-range 0 number-of-medias
+  let media-amount 1
+  if number-of-medias > 1 [set media-amount number-of-medias]
+  set-plot-y-range 0 media-amount
   set-plot-x-range 0 1.01
   set-histogram-num-bars 20
 end
@@ -1483,10 +1488,10 @@ NIL
 HORIZONTAL
 
 PLOT
-13
-528
-796
-881
+10
+513
+793
+866
 High force-of-Arguments and High force-of-Norms
 cycles
 parameters
@@ -1714,7 +1719,7 @@ number-of-medias
 number-of-medias
 0
 9
-3.0
+0.0
 1
 1
 NIL
@@ -1722,14 +1727,14 @@ HORIZONTAL
 
 SLIDER
 1070
-20
-1326
-53
+16
+1243
+49
 media-opinion-mean
 media-opinion-mean
 0
 1
-0.46
+0.5
 0.01
 1
 NIL
@@ -1744,7 +1749,7 @@ media-opinion-std
 media-opinion-std
 0
 1
-0.38
+0.28
 0.01
 1
 NIL
@@ -1759,7 +1764,7 @@ perceived-bias-mean
 perceived-bias-mean
 -1
 1
-1.0
+0.3
 0.1
 1
 NIL
@@ -1910,9 +1915,9 @@ The model starts with a random distribution  agents with random evidence and imp
  sqrt( (e1 - e2)^2 + (i1 - i2)^2).
 People make announcements and the patches in the neighbourhood of the announcers (environment), remember that information for some time.
 
-Media agent can also make announcements, the main difference with the peope agent is that they are not attackble and therefore not able to argue. The position of an media agent is fixed (brown grid). Also, the initial reputation of a media agent is much larger than an people agent. 
+Media agent can also make announcements, the main difference with the peope agent is that they are not attackble and therefore not able to argue. The position of an media agent is fixed (brown grid). Also, the initial reputation of a media agent is much larger than an people agent.
 
-They have also a higher reach than the normal agent. The the media agent can be initialized with the number-of-media slider. 
+They have also a higher reach than the normal agent. The the media agent can be initialized with the number-of-media slider.
 ## HOW TO USE IT
 
 The NUMBER slider sets the number of turtles.
@@ -1964,7 +1969,7 @@ PERCEIVED-BIAS-STD - The standard deviation of the perceived media bias distribu
 
 ## SIMULATION ICONS
 An people agent can have different icons in the simmulation, each of this icons have a meaning. The agent can choose from three different movement strategies;
- 
+
 SMILEY - The agent moves away from the most corresponding area.
 ARROW - the agent moves perpendicular towards the most corresponding area
 CIRCLE - The agent moves toward the area that corresonds best with the agent's opinion
@@ -1981,7 +1986,7 @@ Black: Against a proposition
 Yellow: Indifferent
 
 ## WHAT IS NEW?
-Our contribution to this simulation is the impelentation of a new agent type (media). The media agent has some attributes that can be manipulated throught the interface. The new added element can be find on the right hand side of the interface, it consists of the following elements: 
+Our contribution to this simulation is the impelentation of a new agent type (media). The media agent has some attributes that can be manipulated throught the interface. The new added element can be find on the right hand side of the interface, it consists of the following elements:
 
 SLIDERS:
 	- media-opinion-mean
@@ -1990,7 +1995,7 @@ SLIDERS:
 	- perceived-bias-mean
 	- perceived-bias-std
 	- mean-impact
-POLOTS: 
+POLOTS:
 	- Distribution of Evidence for Media
 	- Reputation of Agents
 	- Peoples opinion
